@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server'
 
-import { isAuthenticated } from '@/lib/auth'
-import { leadRepository } from '@/lib/db/leads'
-import { sendWelcomeEmail } from '@/lib/email/send-welcome-email'
-import { sendWelcomeSchema } from '@/lib/validations'
+import { isAuthenticated } from '@/features/auth/application/session'
+import { sendWelcome } from '@/features/leads/application/send-welcome'
+import { sendWelcomeSchema } from '@/features/leads/types/lead-schema'
 
 export async function POST(request: Request) {
   if (!(await isAuthenticated())) {
@@ -17,29 +16,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Lead inválido.' }, { status: 422 })
   }
 
-  const lead = await leadRepository.getById(parsed.data.leadId).catch(() => null)
+  const result = await sendWelcome(parsed.data.leadId)
 
-  if (!lead) {
-    return NextResponse.json({ error: 'Lead não encontrado.' }, { status: 404 })
-  }
+  if (result.ok) return NextResponse.json({ lead: result.lead })
 
-  if (lead.welcome_sent_at) {
-    return NextResponse.json({ lead })
-  }
-
-  const sent = await sendWelcomeEmail(lead.name, lead.email)
-
-  if (!sent.ok) {
-    return NextResponse.json({ error: sent.message }, { status: 502 })
-  }
-
-  try {
-    return NextResponse.json({ lead: await leadRepository.markWelcomeSent(lead.id, new Date()) })
-  } catch {
-    // O email já saiu; devolver 200 com o lead marcado em memória evita que o
-    // operador reenvie por achar que falhou.
-    return NextResponse.json({
-      lead: { ...lead, welcome_sent_at: new Date().toISOString() },
-    })
-  }
+  return NextResponse.json(
+    { error: result.message },
+    { status: result.reason === 'not-found' ? 404 : 502 },
+  )
 }

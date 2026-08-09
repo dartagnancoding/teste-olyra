@@ -164,8 +164,41 @@ botão. Para uso real, basta verificar um domínio da Olyra e trocar `RESEND_FRO
 
 ## Estrutura de pastas
 
+Organização **por feature**, cada uma dividida em quatro camadas.
+
 ```
 src/
+  features/
+    leads/
+      components/           crm-view, cards-view, lead-form, lead-table,
+                            lead-card, search-bar, send-welcome-button,
+                            origin-summary
+      hooks/                use-lead-list — lista, filtros e mutações locais
+      application/          casos de uso: get-leads, create-lead,
+                            send-welcome, filter-leads
+      data/                 supabase-lead-repository, resend-welcome-mailer,
+                            http-lead-gateway, welcome-email-template
+      types/                lead, lead-schema e as portas: lead-repository,
+                            welcome-mailer, lead-gateway
+      dependencies.ts       composition root (client)
+      dependencies.server.ts composition root (servidor)
+    auth/
+      components/           login-form, demo-credentials
+      application/          session: login, logout, isAuthenticated
+      data/                 cookie-session-store, env-credentials-checker
+      types/                auth: loginSchema e as portas SessionStore
+                            e CredentialsChecker
+      dependencies.ts
+  components/
+    ui/                     átomos e moléculas compartilhados (button, input,
+                            select, field, card, badge, empty/error state)
+    layout/                 header, footer, nav-link, logout-button,
+                            page-heading
+    brand/                  wordmark
+  lib/
+    supabase/client.ts      conexão compartilhada (server-only, preguiçosa)
+    utils/                  cn, formatação de data e iniciais
+    env.ts                  leitura de env com falha explícita
   app/
     layout.tsx              fontes (Fraunces/Inter), metadata
     globals.css             tokens @theme da identidade Olyra
@@ -175,42 +208,27 @@ src/
       layout.tsx            guard de sessão + header + footer
       crm/page.tsx          formulário + resumo + busca + tabela
       cards/page.tsx        busca + grid de cards
-    api/
-      auth/login|logout     valida credencial, cria/destrói sessão
-      leads                 GET lista · POST cadastra
-      send-welcome          POST envia email e persiste o status
-  components/
-    ui/                     átomos e moléculas (button, input, select,
-                            field, card, badge, empty-state, error-state)
-    layout/                 header, footer, nav-link, logout-button,
-                            page-heading
-    brand/                  wordmark
-    auth/                   login-form
-    leads/                  crm-view, cards-view, lead-form, lead-table,
-                            lead-card, search-bar, send-welcome-button,
-                            origin-summary
-  hooks/
-    use-lead-list.ts        lista + filtros + mutações locais
-  lib/
-    db/types.ts             contrato de persistência (LeadRepository)
-    db/client.ts            cliente Supabase (server-only, preguiçoso)
-    db/leads.ts             implementação concreta do contrato
-    leads/api.ts            acesso do client às rotas
-    leads/filter-leads.ts   busca, filtro e contagem por origem (puro)
-    leads/load-leads.ts     leitura server-side com erro tratado
-    email/                  template e envio das boas-vindas
-    utils/                  cn, formatação de data e iniciais
-    auth.ts                 assinatura e verificação de sessão
-    env.ts                  leitura de env com falha explícita
-    validations.ts          schemas Zod
-  types/lead.ts             tipos do domínio e lista de origens
+    api/                    adaptadores finos: validam e chamam a application
 supabase/
   schema.sql · seed.sql     SQL de criação e leads fictícios
 ```
 
-**Camadas.** A UI nunca importa o cliente do banco: componente → `lib/leads/api.ts`
-→ route handler → `lib/db/leads.ts` → Supabase. Para leitura inicial, o Server
-Component chama `lib/leads/load-leads.ts` direto.
+**Direção das dependências.**
+
+```
+components → application → types (portas) ← data
+```
+
+Componentes chamam casos de uso; casos de uso dependem só de **contratos**
+declarados em `types`; `data` implementa esses contratos. Nenhum componente
+importa `data` nem o cliente do banco — o pacote `server-only` transforma essa
+tentativa em erro de build.
+
+**Trocar Supabase por Postgres** é escrever `data/postgres-lead-repository.ts`
+respeitando a porta `LeadRepository` e apontar uma linha de
+`features/leads/dependencies.server.ts` para ele. A application, os componentes
+e as rotas não mudam. O mesmo vale para trocar o Resend: a porta é
+`WelcomeMailer`.
 
 ---
 

@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 
 import { Footer } from '@/components/layout/footer'
 import { Header } from '@/components/layout/header'
-import { isAuthenticated } from '@/lib/auth'
+import { isAuthenticated } from '@/features/auth/application/session'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   if (!(await isAuthenticated())) redirect('/login')

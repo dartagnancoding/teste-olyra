@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 
-import { CrmView } from '@/components/leads/crm-view'
+import { CrmView } from '@/features/leads/components/crm-view'
 import { PageHeading } from '@/components/layout/page-heading'
 import { ErrorState } from '@/components/ui/error-state'
-import { loadLeads } from '@/lib/leads/load-leads'
+import { getLeads } from '@/features/leads/application/get-leads'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 }
 
 export default async function CrmPage() {
-  const result = await loadLeads()
+  const result = await getLeads()
 
   return (
     <>

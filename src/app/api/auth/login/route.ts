@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
-import { createSession, validateCredentials } from '@/lib/auth'
-import { loginSchema } from '@/lib/validations'
+import { login } from '@/features/auth/application/session'
+import { loginSchema } from '@/features/auth/types/auth'
 
 export async function POST(request: Request) {
   const body: unknown = await request.json().catch(() => null)
@@ -11,11 +11,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Preencha usuário e senha.' }, { status: 400 })
   }
 
-  if (!validateCredentials(parsed.data.user, parsed.data.password)) {
+  if (!(await login(parsed.data.user, parsed.data.password))) {
     return NextResponse.json({ error: 'Usuário ou senha inválidos.' }, { status: 401 })
   }
-
-  await createSession()
 
   return NextResponse.json({ ok: true })
 }

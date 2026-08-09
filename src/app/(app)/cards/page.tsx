@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 
-import { CardsView } from '@/components/leads/cards-view'
+import { CardsView } from '@/features/leads/components/cards-view'
 import { PageHeading } from '@/components/layout/page-heading'
 import { ErrorState } from '@/components/ui/error-state'
-import { loadLeads } from '@/lib/leads/load-leads'
+import { getLeads } from '@/features/leads/application/get-leads'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 }
 
 export default async function CardsPage() {
-  const result = await loadLeads()
+  const result = await getLeads()
 
   return (
     <>

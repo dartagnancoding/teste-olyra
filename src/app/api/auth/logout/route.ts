@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 
-import { destroySession } from '@/lib/auth'
+import { logout } from '@/features/auth/application/session'
 
 export async function POST() {
-  await destroySession()
+  await logout()
 
   return NextResponse.json({ ok: true })
 }

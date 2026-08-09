@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
-import { DemoCredentials } from '@/components/auth/demo-credentials'
-import { LoginForm } from '@/components/auth/login-form'
+import { DemoCredentials } from '@/features/auth/components/demo-credentials'
+import { LoginForm } from '@/features/auth/components/login-form'
 import { Wordmark } from '@/components/brand/wordmark'
 import { Card } from '@/components/ui/card'
-import { isAuthenticated } from '@/lib/auth'
+import { isAuthenticated } from '@/features/auth/application/session'
 
 export const metadata: Metadata = {
   title: 'Entrar — Olyra',
