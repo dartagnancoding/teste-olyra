@@ -1,26 +1,82 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Paleta oficial Olyra */
+  --color-forest: #3c5b43;
+  --color-forest-deep: #061b0c;
+  --color-cream: #f8f4e8;
+  --color-sage: #a3c4a8;
+
+  /* Derivados semânticos */
+  --color-bg: var(--color-cream);
+  --color-surface: #ffffff;
+  --color-text: var(--color-forest-deep);
+  --color-text-muted: #5a6b5e;
+  --color-border: #dfe5da;
+  --color-primary: var(--color-forest);
+  --color-primary-hover: #2f4835;
+
+  /* Estados */
+  --color-success: #4a7c59;
+  --color-error: #9b4444;
+
+  /* Superfícies de apoio, derivadas da paleta */
+  --color-sage-soft: #eef3ec;
+  --color-success-soft: #edf4ef;
+  --color-error-soft: #f7ecec;
+
+  /* Tipografia — as variáveis --font-fraunces/--font-inter vêm de next/font */
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
+
+  /* Forma — `--radius-md` alimenta as utilidades `rounded-md` do Tailwind */
+  --radius: 10px;
+  --radius-md: var(--radius);
+  --radius-sm: 6px;
+  --radius-lg: 16px;
+
+  /* Elevação — sombra dupla, luz vindo de cima */
+  --shadow-soft: 0 1px 2px rgb(6 27 12 / 0.05);
+  --shadow-raised:
+    0 4px 8px rgb(6 27 12 / 0.07), 0 2px 4px rgb(6 27 12 / 0.04);
+
+  /* Movimento — estética warm: suave e discreto */
+  --ease-out-soft: cubic-bezier(0, 0, 0.2, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  /* Um único anel de foco para o projeto inteiro, em tom da paleta */
+  :focus-visible {
+    outline: 2px solid var(--color-forest);
+    outline-offset: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
