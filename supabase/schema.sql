@@ -12,6 +12,6 @@ create table if not exists leads (
 create index if not exists leads_created_at_idx on leads (created_at desc);
 
 -- A autenticação do painel é fixa e não usa Supabase Auth: todo acesso passa
--- pelo servidor com a service role key. Sem policy pública, o anon key não lê
--- nada mesmo se vazar.
+-- pelo servidor com a secret key, que tem BYPASSRLS. Sem policy pública, a
+-- publishable key não lê nada mesmo se vazar.
 alter table leads enable row level security;

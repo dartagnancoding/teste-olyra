@@ -46,15 +46,17 @@ Variáveis necessárias:
 | Variável | Onde obter |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API → Project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API → `service_role` |
+| `SUPABASE_SECRET_KEY` | Supabase → Project Settings → API Keys → **Secret key** (`sb_secret_…`) |
 | `AUTH_USER` | Você escolhe — usuário do painel |
 | `AUTH_PASSWORD` | Você escolhe — senha do painel |
 | `SESSION_SECRET` | String aleatória longa: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 | `RESEND_API_KEY` | resend.com → API Keys |
 | `RESEND_FROM` | `onboarding@resend.dev` enquanto não houver domínio verificado |
 
-> A `service_role` key ignora RLS. Ela só é lida no servidor e nunca chega ao
-> navegador — não a exponha com prefixo `NEXT_PUBLIC_`.
+> A **secret key** substitui a antiga `service_role` e ignora RLS (`BYPASSRLS`).
+> Ela só é lida no servidor e nunca chega ao navegador — não a exponha com
+> prefixo `NEXT_PUBLIC_`. A **publishable key** (`sb_publishable_…`, sucessora
+> da `anon`) não é usada neste projeto.
 
 ### 3. Criar a tabela e o seed no Supabase
 
@@ -133,8 +135,9 @@ sessão. O cookie é `httpOnly`, `sameSite=lax`, `secure` em produção, 8h de v
 A comparação de credenciais usa `timingSafeEqual`.
 
 **RLS ligada, sem policy pública.** Como todo acesso passa pelo servidor com a
-service role key, nenhuma policy é necessária. Com RLS ligada e sem policy, a
-`anon` key não lê nada mesmo se vazar.
+secret key, nenhuma policy é necessária. Com RLS ligada e sem policy, a
+publishable key não lê nada mesmo se vazar. O Supabase ainda recusa a secret key
+com 401 se ela partir de um browser, então a chave só funciona onde deve.
 
 **Filtro no client.** A base cabe em memória (dezenas a poucas centenas de
 leads). Filtrar no client dá resposta instantânea e evita uma ida ao servidor a

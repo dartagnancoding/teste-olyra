@@ -164,9 +164,14 @@ O schema é quase idêntico ao spec, com duas adições:
 O `alter table leads enable row level security` merece um parágrafo, porque é
 contraintuitivo: **liga-se RLS e não se cria nenhuma policy.** No Postgres, RLS
 ligada sem policy significa "ninguém lê nada". Isso é de propósito. Todo acesso
-do painel passa pelo servidor usando a *service role key*, que ignora RLS por
-definição. Então a RLS ligada não atrapalha o painel e serve de rede de
-segurança: se a `anon` key vazar, ela não lê um único lead.
+do painel passa pelo servidor usando a *secret key* (`sb_secret_…`), que carrega
+`BYPASSRLS` e ignora as policies por definição. Então a RLS ligada não atrapalha
+o painel e serve de rede de segurança: se a *publishable key* vazar, ela não lê
+um único lead.
+
+(Essas são as chaves novas do Supabase. A `service_role` virou **secret key** e
+a `anon` virou **publishable key**; as antigas ainda funcionam, mas saem de
+circulação no fim de 2026.)
 
 O seed foi reescrito em relação ao spec. O spec tinha um `insert ... values`
 simples, que duplicaria os 6 leads a cada execução. A versão final usa
@@ -208,8 +213,8 @@ O código tem `getDb()`, que cria na primeira chamada e guarda
 
 E a primeira linha do arquivo é `import 'server-only'`. Esse pacote não faz nada
 em runtime — ele existe para explodir o build se um componente `'use client'`
-importar o módulo. É a barreira que garante que a service role key nunca chega
-ao navegador. O mesmo import aparece em `auth.ts`, `db/leads.ts`,
+importar o módulo. É a barreira que garante que a secret key nunca chega ao
+navegador. O mesmo import aparece em `auth.ts`, `db/leads.ts`,
 `leads/load-leads.ts` e `email/send-welcome-email.ts`.
 
 **`src/lib/db/types.ts`** também não estava no spec. Define um contrato:
