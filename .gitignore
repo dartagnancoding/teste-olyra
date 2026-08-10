@@ -43,3 +43,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code — worktrees guardam uma cópia inteira do projeto
+.claude/worktrees/
+.claude/settings.local.json
