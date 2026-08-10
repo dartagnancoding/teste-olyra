@@ -365,9 +365,22 @@ Esses quatro ficam em `src/components/layout/` e não dentro de uma feature —
 são o chassi da aplicação, não pertencem a leads nem a auth. (O `logout-button`
 chama a action de auth, mas continua sendo peça de layout.)
 
-**`components/brand/wordmark.tsx`** não estava no spec. É a marca "Olyra" com um
-SVG de folha desenhado à mão. O mesmo desenho reaparece em `empty-state.tsx` — a
-folha é o motivo botânico que amarra a identidade.
+**`components/brand/wordmark.tsx`** não estava no spec. Nasceu como um SVG de
+folha desenhado à mão e hoje serve a **logo oficial da Olyra** — o lockup
+horizontal (símbolo de gota com espiral + "OLYRA"), monocromático e com fundo
+transparente, o que dispensa variante para creme e para branco.
+
+O arquivo é servido de `public/olyra-logo.png`, e **não** por hotlink na CDN da
+loja: dependência de terceiro pode cair, mudar de caminho ou limitar requisição,
+e a marca sumiria do painel sem aviso.
+
+O símbolo isolado virou o favicon em `src/app/icon.png` — o App Router detecta
+esse nome sozinho e gera a tag `<link rel="icon">`. Foi recortado da versão
+quadrada da marca, deixando de fora a palavra "OLYRA", que é ilegível a 16px.
+Com isso saiu também o `favicon.ico` padrão do `create-next-app`.
+
+O SVG de folha original sobreviveu em `empty-state.tsx`, como ícone decorativo
+dos estados vazios.
 
 **Estado ao fim do Bloco 1:** dá para entrar, o header aparece, e tentar acessar
 `/crm` sem sessão joga para o login.
@@ -901,7 +914,7 @@ Vale ter essa lista à mão, porque é onde a implementação tomou decisões pr
 | `loading.tsx` nas duas rotas | skeleton durante o carregamento no servidor |
 | `select`, `empty-state`, `error-state`, `skeleton`, `control.ts` | 4 componentes e 1 base compartilhada além dos 5 do spec |
 | Variante `outline` no botão | discrição para "Enviar boas-vindas" |
-| `wordmark.tsx` | marca com o motivo botânico |
+| `wordmark.tsx` + `icon.png` | logo oficial da Olyra, servida localmente, e favicon próprio |
 | `page-heading.tsx` | título e descrição das páginas, um só lugar |
 | `origin-summary.tsx` | melhoria opcional #1 do spec |
 | `demo-credentials.tsx` | quem avalia entra sem depender de receber a senha |

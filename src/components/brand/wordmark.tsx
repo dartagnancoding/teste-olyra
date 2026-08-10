@@ -1,29 +1,34 @@
+import Image from 'next/image'
+
 import { cn } from '@/lib/utils/cn'
 
+/** Proporção do arquivo original (400×116) — trava o aspecto ao mudar a altura. */
+const LOGO_WIDTH = 400
+const LOGO_HEIGHT = 116
+
 type WordmarkProps = {
+  /** Controle a altura por classe (`h-7`, `h-10`…); a largura acompanha. */
   className?: string
+  priority?: boolean
 }
 
-export function Wordmark({ className }: WordmarkProps) {
+/**
+ * Logo oficial da Olyra, servida do próprio projeto e não da CDN da loja —
+ * hotlink de terceiro é dependência que pode cair, mudar de caminho ou limitar
+ * requisição, e a marca sumiria do painel sem aviso.
+ *
+ * O arquivo é monocromático com fundo transparente, então funciona sobre creme
+ * e sobre branco sem variante.
+ */
+export function Wordmark({ className, priority }: WordmarkProps) {
   return (
-    <span className={cn('inline-flex items-center gap-2', className)}>
-      <svg
-        aria-hidden
-        viewBox="0 0 24 24"
-        className="size-5 shrink-0 text-forest"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.4}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M12 21V10.5" />
-        <path d="M12 13.5C12 8.8 15.4 5 19.5 4.5c.4 4.6-2.8 8.6-7.5 9Z" />
-        <path d="M12 16.5C12 13 9.6 10.2 6.5 9.8c-.3 3.4 2.1 6.4 5.5 6.7Z" />
-      </svg>
-      <span className="font-display text-xl leading-none font-semibold text-forest-deep">
-        Olyra
-      </span>
-    </span>
+    <Image
+      src="/olyra-logo.png"
+      alt="Olyra"
+      width={LOGO_WIDTH}
+      height={LOGO_HEIGHT}
+      priority={priority}
+      className={cn('h-7 w-auto', className)}
+    />
   )
 }

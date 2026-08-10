@@ -9,7 +9,7 @@ export function Header() {
     <header className="border-b border-border bg-surface">
       <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-6 py-4">
         <Link href="/crm" className="rounded-md">
-          <Wordmark />
+          <Wordmark priority />
         </Link>
 
         <nav aria-label="Navegação principal" className="order-3 flex w-full gap-1 sm:order-none sm:w-auto">

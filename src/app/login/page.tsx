@@ -18,7 +18,7 @@ export default async function LoginPage() {
     <main className="flex flex-1 items-center justify-center px-6 py-16">
       <div className="w-full max-w-[400px]">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <Wordmark className="scale-125" />
+          <Wordmark className="h-10 w-auto" priority />
           <p className="text-base text-text-muted">Painel de leads</p>
         </div>
 
