@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { logoutAction } from '@/features/auth/actions'
 
 export function LogoutButton() {
   const router = useRouter()
@@ -13,7 +14,7 @@ export function LogoutButton() {
     setIsLeaving(true)
 
     try {
-      await fetch('/api/auth/logout', { method: 'POST' })
+      await logoutAction()
       router.replace('/login')
       router.refresh()
     } finally {

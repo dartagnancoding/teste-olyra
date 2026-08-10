@@ -144,6 +144,19 @@ leads). Filtrar no client dá resposta instantânea e evita uma ida ao servidor 
 cada tecla. Se a base crescer, o ponto de troca é `src/lib/leads/filter-leads.ts`
 mais um parâmetro de query na rota `GET /api/leads`.
 
+**Server Actions em vez de rotas de API.** Não há consumidor externo nem regra
+de negócio que justifique uma API dedicada: o único cliente do backend é o
+próprio front. Uma rota REST aqui seria serializar JSON, escolher status codes e
+manter uma camada de transporte para falar consigo mesmo. As mutações são
+Server Actions — o componente chama uma função tipada, sem `fetch` e sem
+`as { lead: Lead }` no meio do caminho, e o formulário funciona mesmo sem
+JavaScript. Isso removeu quatro rotas, o gateway HTTP e a porta que só existia
+para abstrair o `fetch`.
+
+Como Server Action é endpoint público (invocável sem passar pela UI), a
+verificação de sessão e o parse com Zod continuam em `actions.ts`, exatamente
+como estavam nos route handlers.
+
 **Leitura no servidor, mutação no client.** `/crm` e `/cards` são Server
 Components que carregam a lista direto do repositório — sem `useEffect` de
 fetch. O client recebe a lista como estado inicial e a atualiza com o lead que a
@@ -177,18 +190,19 @@ src/
       application/          casos de uso: get-leads, create-lead,
                             send-welcome, filter-leads
       data/                 supabase-lead-repository, resend-welcome-mailer,
-                            http-lead-gateway, welcome-email-template
-      types/                lead, lead-schema e as portas: lead-repository,
-                            welcome-mailer, lead-gateway
-      dependencies.ts       composition root (client)
-      dependencies.server.ts composition root (servidor)
+                            welcome-email-template
+      types/                lead, lead-schema, results e as portas:
+                            lead-repository, welcome-mailer
+      actions.ts            Server Actions — adaptador de entrada
+      dependencies.server.ts composition root
     auth/
       components/           login-form, demo-credentials
       application/          session: login, logout, isAuthenticated
       data/                 cookie-session-store, env-credentials-checker
       types/                auth: loginSchema e as portas SessionStore
                             e CredentialsChecker
-      dependencies.ts
+      actions.ts            Server Actions
+      dependencies.ts       composition root
   components/
     ui/                     átomos e moléculas compartilhados (button, input,
                             select, field, card, badge, empty/error state)
@@ -208,7 +222,6 @@ src/
       layout.tsx            guard de sessão + header + footer
       crm/page.tsx          formulário + resumo + busca + tabela
       cards/page.tsx        busca + grid de cards
-    api/                    adaptadores finos: validam e chamam a application
 supabase/
   schema.sql · seed.sql     SQL de criação e leads fictícios
 ```

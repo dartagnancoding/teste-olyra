@@ -1,14 +1,10 @@
 import 'server-only'
 
 import { leadRepository } from '@/features/leads/dependencies.server'
-import type { Lead } from '@/features/leads/types/lead'
 import type { LeadInput } from '@/features/leads/types/lead-schema'
+import type { LeadResult } from '@/features/leads/types/results'
 
-export type CreateLeadResult =
-  | { ok: true; lead: Lead }
-  | { ok: false; message: string }
-
-export async function createLead(input: LeadInput): Promise<CreateLeadResult> {
+export async function createLead(input: LeadInput): Promise<LeadResult> {
   try {
     return { ok: true, lead: await leadRepository.create(input) }
   } catch (error) {

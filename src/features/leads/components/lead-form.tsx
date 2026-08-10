@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
-import { leadGateway } from '@/features/leads/dependencies'
+import { createLeadAction } from '@/features/leads/actions'
 import { leadSchema, type LeadInput } from '@/features/leads/types/lead-schema'
 import { ORIGINS, type Lead } from '@/features/leads/types/lead'
 
@@ -35,16 +35,16 @@ export function LeadForm({ onCreated }: LeadFormProps) {
   async function onSubmit(values: LeadInput) {
     setStatus(null)
 
-    try {
-      onCreated(await leadGateway.create(values))
-      reset()
-      setStatus({ tone: 'success', message: 'Lead cadastrado com sucesso.' })
-    } catch (error) {
-      setStatus({
-        tone: 'error',
-        message: error instanceof Error ? error.message : 'Erro inesperado.',
-      })
+    const result = await createLeadAction(values)
+
+    if (!result.ok) {
+      setStatus({ tone: 'error', message: result.message })
+      return
     }
+
+    onCreated(result.lead)
+    reset()
+    setStatus({ tone: 'success', message: 'Lead cadastrado com sucesso.' })
   }
 
   return (

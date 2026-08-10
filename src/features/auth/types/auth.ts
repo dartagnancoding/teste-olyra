@@ -7,6 +7,8 @@ export const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>
 
+export type LoginResult = { ok: true } | { ok: false; message: string }
+
 /**
  * Porta de verificação de credencial. Hoje a implementação lê variáveis de
  * ambiente; trocar por uma tabela de usuários com hash é escrever outra

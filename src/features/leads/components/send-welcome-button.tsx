@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { leadGateway } from '@/features/leads/dependencies'
+import { sendWelcomeAction } from '@/features/leads/actions'
 import type { Lead } from '@/features/leads/types/lead'
 
 type SendWelcomeButtonProps = {
@@ -41,13 +41,12 @@ export function SendWelcomeButton({ lead, onSent, block }: SendWelcomeButtonProp
     setIsSending(true)
     setError(null)
 
-    try {
-      onSent(await leadGateway.sendWelcome(lead.id))
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Erro inesperado.')
-    } finally {
-      setIsSending(false)
-    }
+    const result = await sendWelcomeAction(lead.id)
+
+    if (result.ok) onSent(result.lead)
+    else setError(result.message)
+
+    setIsSending(false)
   }
 
   return (

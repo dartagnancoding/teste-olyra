@@ -1,11 +1,7 @@
 import 'server-only'
 
 import { leadRepository } from '@/features/leads/dependencies.server'
-import type { Lead } from '@/features/leads/types/lead'
-
-export type LeadsResult =
-  | { ok: true; leads: Lead[] }
-  | { ok: false; message: string }
+import type { LeadsResult } from '@/features/leads/types/results'
 
 /**
  * Falha de banco vira estado de tela, não erro 500 — o painel continua

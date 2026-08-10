@@ -1,32 +1,24 @@
 import 'server-only'
 
 import { leadRepository, welcomeMailer } from '@/features/leads/dependencies.server'
-import type { Lead } from '@/features/leads/types/lead'
-
-export type SendWelcomeResult =
-  | { ok: true; lead: Lead }
-  | { ok: false; reason: 'not-found' | 'mailer'; message: string }
+import type { LeadResult } from '@/features/leads/types/results'
 
 /**
  * Orquestra repositório e mailer. Nenhum dos dois é conhecido concretamente
  * aqui — só os contratos —, então esta regra sobrevive à troca de Supabase e
  * de Resend sem uma linha alterada.
  */
-export async function sendWelcome(leadId: string): Promise<SendWelcomeResult> {
+export async function sendWelcome(leadId: string): Promise<LeadResult> {
   const lead = await leadRepository.getById(leadId).catch(() => null)
 
-  if (!lead) {
-    return { ok: false, reason: 'not-found', message: 'Lead não encontrado.' }
-  }
+  if (!lead) return { ok: false, message: 'Lead não encontrado.' }
 
   // Dois cliques ou duas abas não podem gerar dois emails para o mesmo lead.
   if (lead.welcome_sent_at) return { ok: true, lead }
 
   const sent = await welcomeMailer.send(lead.name, lead.email)
 
-  if (!sent.ok) {
-    return { ok: false, reason: 'mailer', message: sent.message }
-  }
+  if (!sent.ok) return { ok: false, message: sent.message }
 
   try {
     return { ok: true, lead: await leadRepository.markWelcomeSent(lead.id, new Date()) }

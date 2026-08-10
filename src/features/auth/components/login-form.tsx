@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { loginAction } from '@/features/auth/actions'
 import { loginSchema, type LoginInput } from '@/features/auth/types/auth'
 
 export function LoginForm() {
@@ -27,20 +28,10 @@ export function LoginForm() {
     setServerError(null)
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
+      const result = await loginAction(values)
 
-      if (!response.ok) {
-        const data: unknown = await response.json().catch(() => null)
-        const message =
-          data && typeof data === 'object' && 'error' in data
-            ? String(data.error)
-            : 'Não foi possível entrar. Tente novamente.'
-
-        setServerError(message)
+      if (!result.ok) {
+        setServerError(result.message)
         return
       }
 
