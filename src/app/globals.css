@@ -1,18 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  /* Paleta oficial Olyra */
+  /* Paleta oficial Olyra — sugerida no enunciado do desafio */
   --color-forest: #3c5b43;
   --color-forest-deep: #061b0c;
   --color-cream: #f8f4e8;
   --color-sage: #a3c4a8;
 
-  /* Derivados semânticos */
-  --color-bg: var(--color-cream);
+  /* Neutros do site da Olyra (clubolyra.com.br): branco nas superfícies,
+     #f5f5f5 nas faixas de apoio, #061b0c nas barras escuras. */
+  --color-paper: #f5f5f5;
+
+  /* Derivados semânticos.
+     O fundo é o cinza-claro do site e a superfície é branca — se os dois
+     fossem branco puro, o card sumiria no fundo e sobraria só a borda para
+     separá-los. */
+  --color-bg: var(--color-paper);
   --color-surface: #ffffff;
   --color-text: var(--color-forest-deep);
   --color-text-muted: #5a6b5e;
-  --color-border: #dfe5da;
+  --color-border: #e4e4e4;
   --color-primary: var(--color-forest);
   --color-primary-hover: #2f4835;
 
@@ -20,7 +27,8 @@
   --color-success: #4a7c59;
   --color-error: #9b4444;
 
-  /* Superfícies de apoio, derivadas da paleta */
+  /* Superfícies de apoio. Continuam com um véu de verde — é o que impede o
+     painel de virar admin genérico agora que o fundo é neutro. */
   --color-sage-soft: #eef3ec;
   --color-success-soft: #edf4ef;
   --color-error-soft: #f7ecec;
