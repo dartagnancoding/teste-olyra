@@ -15,4 +15,5 @@ export type LeadRepository = {
   getById(id: string): Promise<DataResult<Lead | null>>
   create(lead: NewLead): Promise<DataResult<Lead>>
   markWelcomeSent(id: string, sentAt: Date): Promise<DataResult<Lead>>
+  remove(id: string): Promise<DataResult<void>>
 }

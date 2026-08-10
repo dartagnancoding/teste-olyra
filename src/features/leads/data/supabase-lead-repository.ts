@@ -128,6 +128,18 @@ export const supabaseLeadRepository: LeadRepository = {
     }
   },
 
+  async remove(id) {
+    try {
+      const { error } = await getSupabase().from(TABLE).delete().eq('id', id)
+
+      if (error) return dataFailure(classify(error), describe(error))
+
+      return { ok: true, data: undefined }
+    } catch (error) {
+      return fromThrown(error, 'leads.remove')
+    }
+  },
+
   async markWelcomeSent(id, sentAt) {
     try {
       const { data, error } = await getSupabase()

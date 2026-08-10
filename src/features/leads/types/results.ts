@@ -32,3 +32,5 @@ export type Failure = {
 export type LeadsResult = { ok: true; leads: Lead[] } | Failure
 
 export type LeadResult = { ok: true; lead: Lead } | Failure
+
+export type VoidResult = { ok: true } | Failure

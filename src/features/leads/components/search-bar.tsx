@@ -4,7 +4,12 @@ import { useId } from 'react'
 
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
-import { ALL_ORIGINS, type LeadFilters } from '@/features/leads/application/filter-leads'
+import {
+  ALL_ORIGINS,
+  SORTS,
+  type LeadFilters,
+  type SortKey,
+} from '@/features/leads/application/filter-leads'
 import { ORIGINS } from '@/features/leads/types/lead'
 import { cn } from '@/lib/utils/cn'
 
@@ -17,6 +22,7 @@ type SearchBarProps = {
 export function SearchBar({ filters, onChange, className }: SearchBarProps) {
   const queryId = useId()
   const originId = useId()
+  const sortId = useId()
 
   return (
     <div className={cn('flex flex-col gap-3 sm:flex-row sm:items-center', className)}>
@@ -46,6 +52,25 @@ export function SearchBar({ filters, onChange, className }: SearchBarProps) {
           {ORIGINS.map((origin) => (
             <option key={origin} value={origin}>
               {origin}
+            </option>
+          ))}
+        </Select>
+      </div>
+
+      <div className="sm:w-48">
+        <label htmlFor={sortId} className="sr-only">
+          Ordenar por
+        </label>
+        <Select
+          id={sortId}
+          value={filters.sort}
+          onChange={(event) =>
+            onChange({ ...filters, sort: event.target.value as SortKey })
+          }
+        >
+          {Object.entries(SORTS).map(([key, label]) => (
+            <option key={key} value={key}>
+              {label}
             </option>
           ))}
         </Select>

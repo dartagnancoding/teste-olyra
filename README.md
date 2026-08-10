@@ -161,10 +161,15 @@ Como Server Action é endpoint público (invocável sem passar pela UI), a
 verificação de sessão e o parse com Zod continuam em `actions.ts`, exatamente
 como estavam nos route handlers.
 
-**Leitura no servidor, mutação no client.** `/crm` e `/cards` são Server
-Components que carregam a lista direto do repositório — sem `useEffect` de
-fetch. O client recebe a lista como estado inicial e a atualiza com o lead que a
-própria mutação devolve, sem refetch.
+**Leitura no servidor, mutação no client.** `/crm` é um Server Component que
+carrega a lista direto do repositório — sem `useEffect` de fetch. O client
+recebe a lista como estado inicial e a atualiza com o lead que a própria mutação
+devolve, sem refetch.
+
+**Lista e cards na mesma tela, um estado só.** As duas visões são alternadas por
+um toggle e leem do mesmo `useLeadList`, então busca, filtro e ordenação valem
+para ambas e um lead cadastrado aparece nas duas. Antes eram duas rotas com
+estados paralelos — trocar de aba perdia o filtro.
 
 **Cliente Supabase preguiçoso e marcado `server-only`.** O build do Next não
 exige os segredos, e importar o cliente em um componente client vira erro de

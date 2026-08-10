@@ -1,70 +1,61 @@
 'use client'
 
-import { useState } from 'react'
-
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { sendWelcomeAction } from '@/features/leads/actions'
+import { useSendWelcome } from '@/features/leads/hooks/use-send-welcome'
 import type { Lead } from '@/features/leads/types/lead'
+import { cn } from '@/lib/utils/cn'
 
 type SendWelcomeButtonProps = {
   lead: Lead
   onSent: (lead: Lead) => void
-  block?: boolean
 }
 
-export function SendWelcomeButton({ lead, onSent, block }: SendWelcomeButtonProps) {
-  const [isSending, setIsSending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+/**
+ * Atalho de uma ação só, ao lado do status. Fica desabilitado quando o email já
+ * saiu — o menu de ações continua existindo para o resto.
+ */
+export function SendWelcomeButton({ lead, onSent }: SendWelcomeButtonProps) {
+  const { send, isSending, error, alreadySent } = useSendWelcome(lead, onSent)
 
-  if (lead.welcome_sent_at) {
-    return (
-      <Badge tone="success">
+  return (
+    <span className="inline-flex items-center gap-2">
+      <button
+        type="button"
+        onClick={send}
+        disabled={alreadySent || isSending}
+        aria-label={
+          alreadySent
+            ? `Boas-vindas já enviadas para ${lead.name}`
+            : `Enviar boas-vindas para ${lead.name}`
+        }
+        title={alreadySent ? 'Boas-vindas já enviadas' : 'Enviar boas-vindas'}
+        className={cn(
+          'inline-flex size-8 items-center justify-center rounded-sm border transition-colors duration-150 ease-out',
+          alreadySent
+            ? 'cursor-not-allowed border-transparent text-text-muted/50'
+            : 'border-border text-text-muted hover:border-sage hover:bg-sage-soft hover:text-forest',
+          isSending && 'cursor-wait opacity-60',
+        )}
+      >
         <svg
           aria-hidden
           viewBox="0 0 16 16"
-          className="size-3.5"
+          className="size-4"
           fill="none"
           stroke="currentColor"
-          strokeWidth={2}
+          strokeWidth={1.5}
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <path d="M3 8.5l3.5 3.5L13 5" />
+          <path d="M14 2L7.2 8.8" />
+          <path d="M14 2l-4.3 12-2.5-5.2L2 6.3 14 2Z" />
         </svg>
-        Enviado
-      </Badge>
-    )
-  }
+      </button>
 
-  async function handleSend() {
-    setIsSending(true)
-    setError(null)
-
-    const result = await sendWelcomeAction(lead.id)
-
-    if (result.ok) onSent(result.lead)
-    else setError(result.message)
-
-    setIsSending(false)
-  }
-
-  return (
-    <div className={block ? 'w-full' : undefined}>
-      <Button
-        variant="outline"
-        size="sm"
-        block={block}
-        onClick={handleSend}
-        disabled={isSending}
-      >
-        {isSending ? 'Enviando…' : 'Enviar boas-vindas'}
-      </Button>
       {error && (
-        <p role="alert" className="mt-1.5 text-sm text-error">
+        <span role="alert" className="max-w-[24ch] text-xs text-error">
           {error}
-        </p>
+        </span>
       )}
-    </div>
+    </span>
   )
 }

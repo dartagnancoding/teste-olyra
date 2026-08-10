@@ -1,17 +1,18 @@
 'use client'
 
-import { SendWelcomeButton } from '@/features/leads/components/send-welcome-button'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
-import { formatDate, getInitials } from '@/lib/utils/format'
+import { LeadActions } from '@/features/leads/components/lead-actions'
 import type { Lead } from '@/features/leads/types/lead'
+import { formatDate, getInitials } from '@/lib/utils/format'
 
 type LeadCardProps = {
   lead: Lead
   onLeadUpdated: (lead: Lead) => void
+  onLeadRemoved: (id: string) => void
 }
 
-export function LeadCard({ lead, onLeadUpdated }: LeadCardProps) {
+export function LeadCard({ lead, onLeadUpdated, onLeadRemoved }: LeadCardProps) {
   return (
     <Card
       as="article"
@@ -28,17 +29,15 @@ export function LeadCard({ lead, onLeadUpdated }: LeadCardProps) {
           <h2 className="font-display text-lg leading-snug font-semibold">{lead.name}</h2>
           <p className="mt-0.5 text-sm break-all text-text-muted">{lead.email}</p>
         </div>
+        <LeadActions lead={lead} onUpdated={onLeadUpdated} onRemoved={onLeadRemoved} />
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="mt-auto flex flex-wrap items-center gap-3 border-t border-border pt-4">
         <Badge>{lead.origin}</Badge>
         <span className="text-sm text-text-muted tabular-nums">
           {formatDate(lead.created_at)}
         </span>
-      </div>
-
-      <div className="mt-auto border-t border-border pt-4">
-        <SendWelcomeButton lead={lead} onSent={onLeadUpdated} block />
+        {lead.welcome_sent_at && <Badge tone="success">Boas-vindas enviadas</Badge>}
       </div>
     </Card>
   )

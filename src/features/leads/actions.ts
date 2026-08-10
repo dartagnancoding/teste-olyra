@@ -2,9 +2,10 @@
 
 import { isAuthenticated } from '@/features/auth/application/session'
 import { createLead } from '@/features/leads/application/create-lead'
+import { deleteLead } from '@/features/leads/application/delete-lead'
 import { sendWelcome } from '@/features/leads/application/send-welcome'
 import { leadSchema, sendWelcomeSchema } from '@/features/leads/types/lead-schema'
-import type { LeadResult } from '@/features/leads/types/results'
+import type { LeadResult, VoidResult } from '@/features/leads/types/results'
 
 /**
  * Adaptador de entrada da feature — ocupa o lugar que os route handlers
@@ -46,4 +47,18 @@ export async function sendWelcomeAction(leadId: unknown): Promise<LeadResult> {
   }
 
   return sendWelcome(parsed.data.leadId)
+}
+
+export async function deleteLeadAction(leadId: unknown): Promise<VoidResult> {
+  if (!(await isAuthenticated())) {
+    return { ok: false, code: 'UNAUTHENTICATED', message: 'Sessão expirada. Entre novamente.' }
+  }
+
+  const parsed = sendWelcomeSchema.safeParse({ leadId })
+
+  if (!parsed.success) {
+    return { ok: false, code: 'INVALID_INPUT', message: 'Lead inválido.' }
+  }
+
+  return deleteLead(parsed.data.leadId)
 }

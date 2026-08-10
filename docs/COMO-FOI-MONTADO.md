@@ -562,7 +562,7 @@ O `NFD` decompõe "ç" em "c" + cedilha, e o regex remove os diacríticos.
 
 **`src/features/leads/components/search-bar.tsx`** — o componente. É *controlado*:
 não tem estado próprio, recebe `filters` e `onChange`. Isso é o que permite as
-duas telas (`/crm` e `/cards`) reusarem o mesmo componente sem duplicar lógica.
+duas visões (lista e cards) reusarem o mesmo componente sem duplicar lógica.
 
 Os labels usam `sr-only` — visualmente escondidos, presentes para leitor de tela.
 E os `id` vêm de `useId()`, então se o componente aparecesse duas vezes na mesma
