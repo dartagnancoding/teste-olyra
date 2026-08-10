@@ -9,23 +9,20 @@ export default function CrmLoading() {
         <Skeleton className="h-5 w-full max-w-md" />
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3 lg:items-start lg:gap-10">
-        <Card className="flex flex-col gap-6 p-6">
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-11 w-full" />
-          <Skeleton className="h-11 w-full" />
-          <Skeleton className="h-11 w-full" />
-        </Card>
+      <div className="flex flex-col gap-6">
+        <Skeleton className="h-20 w-full" />
 
-        <div className="flex flex-col gap-6 lg:col-span-2">
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-11 w-full" />
-          <Card className="flex flex-col gap-4 p-5">
-            {[0, 1, 2, 3, 4].map((row) => (
-              <Skeleton key={row} className="h-10 w-full" />
-            ))}
-          </Card>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <Skeleton className="h-11 flex-1" />
+          <Skeleton className="h-11 w-full sm:w-56" />
+          <Skeleton className="h-11 w-full sm:w-36" />
         </div>
+
+        <Card className="flex flex-col gap-4 p-5">
+          {[0, 1, 2, 3, 4, 5].map((row) => (
+            <Skeleton key={row} className="h-10 w-full" />
+          ))}
+        </Card>
       </div>
     </div>
   )

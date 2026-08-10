@@ -10,21 +10,23 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { createLeadAction } from '@/features/leads/actions'
 import { leadSchema, type LeadInput } from '@/features/leads/types/lead-schema'
+import type { Failure } from '@/features/leads/types/results'
 import { ORIGINS, type Lead } from '@/features/leads/types/lead'
 
 type LeadFormProps = {
   onCreated: (lead: Lead) => void
+  onCancel: () => void
 }
 
-export function LeadForm({ onCreated }: LeadFormProps) {
-  const [status, setStatus] = useState<{ tone: 'success' | 'error'; message: string } | null>(
-    null,
-  )
+/** Falhas que o operador não resolve editando um campo — aí o código ajuda. */
+const OPAQUE_CODES = new Set(['DB_UNREACHABLE', 'DB_SCHEMA_MISMATCH', 'DB_UNKNOWN'])
+
+export function LeadForm({ onCreated, onCancel }: LeadFormProps) {
+  const [failure, setFailure] = useState<Failure | null>(null)
 
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors, isSubmitting },
   } = useForm<LeadInput>({
     resolver: zodResolver(leadSchema),
@@ -33,18 +35,18 @@ export function LeadForm({ onCreated }: LeadFormProps) {
   })
 
   async function onSubmit(values: LeadInput) {
-    setStatus(null)
+    setFailure(null)
 
     const result = await createLeadAction(values)
 
+    // Em caso de erro o modal fica aberto de propósito: o que foi digitado
+    // continua na tela e dá para corrigir sem redigitar.
     if (!result.ok) {
-      setStatus({ tone: 'error', message: result.message })
+      setFailure(result)
       return
     }
 
     onCreated(result.lead)
-    reset()
-    setStatus({ tone: 'success', message: 'Lead cadastrado com sucesso.' })
   }
 
   return (
@@ -89,22 +91,25 @@ export function LeadForm({ onCreated }: LeadFormProps) {
         </Select>
       </Field>
 
-      <Button type="submit" block disabled={isSubmitting}>
-        {isSubmitting ? 'Cadastrando…' : 'Cadastrar lead'}
-      </Button>
-
-      {status && (
-        <p
-          role="status"
-          className={
-            status.tone === 'success'
-              ? 'rounded-md bg-success-soft px-3 py-2 text-sm text-success'
-              : 'rounded-md bg-error-soft px-3 py-2 text-sm text-error'
-          }
-        >
-          {status.message}
+      {failure && (
+        <p role="alert" className="rounded-md bg-error-soft px-3 py-2 text-sm text-error">
+          {failure.message}
+          {OPAQUE_CODES.has(failure.code) && (
+            <span className="mt-1 block text-xs text-error/80">
+              Código: {failure.code}
+            </span>
+          )}
         </p>
       )}
+
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Cadastrando…' : 'Cadastrar lead'}
+        </Button>
+      </div>
     </form>
   )
 }

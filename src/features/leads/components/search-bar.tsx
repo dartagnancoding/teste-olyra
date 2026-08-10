@@ -6,18 +6,20 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { ALL_ORIGINS, type LeadFilters } from '@/features/leads/application/filter-leads'
 import { ORIGINS } from '@/features/leads/types/lead'
+import { cn } from '@/lib/utils/cn'
 
 type SearchBarProps = {
   filters: LeadFilters
   onChange: (filters: LeadFilters) => void
+  className?: string
 }
 
-export function SearchBar({ filters, onChange }: SearchBarProps) {
+export function SearchBar({ filters, onChange, className }: SearchBarProps) {
   const queryId = useId()
   const originId = useId()
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+    <div className={cn('flex flex-col gap-3 sm:flex-row sm:items-center', className)}>
       <div className="flex-1">
         <label htmlFor={queryId} className="sr-only">
           Buscar por nome ou email
