@@ -16,24 +16,34 @@ import type { LeadResult } from '@/features/leads/types/results'
  */
 export async function createLeadAction(input: unknown): Promise<LeadResult> {
   if (!(await isAuthenticated())) {
-    return { ok: false, message: 'Sessão expirada. Entre novamente.' }
+    return { ok: false, code: 'UNAUTHENTICATED', message: 'Sessão expirada. Entre novamente.' }
   }
 
   const parsed = leadSchema.safeParse(input)
 
-  if (!parsed.success) return { ok: false, message: 'Dados inválidos.' }
+  if (!parsed.success) {
+    const first = parsed.error.issues.at(0)
+
+    return {
+      ok: false,
+      code: 'INVALID_INPUT',
+      message: first ? first.message : 'Dados inválidos.',
+    }
+  }
 
   return createLead(parsed.data)
 }
 
 export async function sendWelcomeAction(leadId: unknown): Promise<LeadResult> {
   if (!(await isAuthenticated())) {
-    return { ok: false, message: 'Sessão expirada. Entre novamente.' }
+    return { ok: false, code: 'UNAUTHENTICATED', message: 'Sessão expirada. Entre novamente.' }
   }
 
   const parsed = sendWelcomeSchema.safeParse({ leadId })
 
-  if (!parsed.success) return { ok: false, message: 'Lead inválido.' }
+  if (!parsed.success) {
+    return { ok: false, code: 'INVALID_INPUT', message: 'Lead inválido.' }
+  }
 
   return sendWelcome(parsed.data.leadId)
 }

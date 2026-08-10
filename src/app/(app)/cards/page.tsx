@@ -24,7 +24,11 @@ export default async function CardsPage() {
       {result.ok ? (
         <CardsView initialLeads={result.leads} />
       ) : (
-        <ErrorState title="Erro ao carregar os leads" description={result.message} />
+        <ErrorState
+          title="Erro ao carregar os leads"
+          description={result.message}
+          code={result.code}
+        />
       )}
     </>
   )

@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { describeFailure } from '@/features/leads/application/describe-failure'
 import { leadRepository } from '@/features/leads/dependencies.server'
 import type { LeadsResult } from '@/features/leads/types/results'
 
@@ -8,15 +9,9 @@ import type { LeadsResult } from '@/features/leads/types/results'
  * navegável e o operador entende o que aconteceu.
  */
 export async function getLeads(): Promise<LeadsResult> {
-  try {
-    return { ok: true, leads: await leadRepository.getAll() }
-  } catch (error) {
-    console.error('[leads] falha ao carregar', error)
+  const result = await leadRepository.getAll()
 
-    return {
-      ok: false,
-      message:
-        'Não foi possível conectar ao banco de dados. Confira as variáveis do Supabase e recarregue a página.',
-    }
-  }
+  if (!result.ok) return describeFailure(result.failure, 'leads.getAll')
+
+  return { ok: true, leads: result.data }
 }

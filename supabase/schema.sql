@@ -11,6 +11,10 @@ create table if not exists leads (
 
 create index if not exists leads_created_at_idx on leads (created_at desc);
 
+-- Email identifica o lead: o seed depende disso para ser idempotente, e a
+-- aplicação traduz a violação (23505) em "já existe um lead com esse email".
+create unique index if not exists leads_email_unique on leads (lower(email));
+
 -- A autenticação do painel é fixa e não usa Supabase Auth: todo acesso passa
 -- pelo servidor com a secret key, que tem BYPASSRLS. Sem policy pública, a
 -- publishable key não lê nada mesmo se vazar.

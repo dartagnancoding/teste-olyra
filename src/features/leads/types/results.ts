@@ -7,11 +7,28 @@ import type { Lead } from '@/features/leads/types/lead'
  *
  * Falha esperada é valor de retorno, não exceção — o componente faz `if`, não
  * `try/catch`.
+ *
+ * `code` é estável e curto de propósito: aparece discretamente na UI e no log
+ * do servidor, então o operador consegue dizer "deu DB_SCHEMA_MISMATCH" e quem
+ * for investigar acha a linha correspondente sem adivinhar.
  */
-export type LeadsResult =
-  | { ok: true; leads: Lead[] }
-  | { ok: false; message: string }
+export type FailureCode =
+  | 'DB_UNREACHABLE'
+  | 'DB_SCHEMA_MISMATCH'
+  | 'DB_CONFLICT'
+  | 'DB_UNKNOWN'
+  | 'MAIL_REJECTED'
+  | 'NOT_FOUND'
+  | 'UNAUTHENTICATED'
+  | 'INVALID_INPUT'
 
-export type LeadResult =
-  | { ok: true; lead: Lead }
-  | { ok: false; message: string }
+export type Failure = {
+  ok: false
+  /** Texto pronto para a tela, em português e sem jargão. */
+  message: string
+  code: FailureCode
+}
+
+export type LeadsResult = { ok: true; leads: Lead[] } | Failure
+
+export type LeadResult = { ok: true; lead: Lead } | Failure
