@@ -4,8 +4,8 @@ Painel interno para cadastrar leads da Olyra, filtrá-los por origem e disparar
 o email de boas-vindas. Duas visualizações da mesma base (lista e cards), acesso
 protegido por credencial fixa e envio real de email.
 
-Identidade visual: paleta oficial Olyra (verde floresta, creme, sage) em estética
-**warm/artesanal** — títulos em serifada, respiro generoso, movimento discreto.
+Identidade visual seguindo o site da Olyra: superfícies brancas sobre `#f5f5f5`,
+verde floresta nas ações, Raleway nos títulos e movimento discreto.
 
 ---
 
@@ -75,6 +75,10 @@ create table if not exists leads (
 
 create index if not exists leads_created_at_idx on leads (created_at desc);
 
+-- Email identifica o lead: sustenta o seed idempotente e a aplicação traduz a
+-- violação (23505) em "já existe um lead com esse email".
+create unique index if not exists leads_email_unique on leads (lower(email));
+
 alter table leads enable row level security;
 ```
 
@@ -123,8 +127,8 @@ interatividade em ilhas não se pagaria.
 
 **Supabase em vez de Postgres próprio.** Banco gerenciado com SQL Editor
 embutido resolve o escopo sem provisionar infra. A troca é possível sem tocar a
-UI: o contrato está em `src/lib/db/types.ts` e a implementação concreta em
-`src/lib/db/leads.ts`.
+UI: o contrato está em `features/leads/types/lead-repository.ts` e a
+implementação concreta em `features/leads/data/supabase-lead-repository.ts`.
 
 **Autenticação fixa por cookie, não Supabase Auth.** O enunciado pede
 explicitamente credenciais fixas sem cadastro de usuários. Implementar OAuth,
@@ -141,8 +145,8 @@ com 401 se ela partir de um browser, então a chave só funciona onde deve.
 
 **Filtro no client.** A base cabe em memória (dezenas a poucas centenas de
 leads). Filtrar no client dá resposta instantânea e evita uma ida ao servidor a
-cada tecla. Se a base crescer, o ponto de troca é `src/lib/leads/filter-leads.ts`
-mais um parâmetro de query na rota `GET /api/leads`.
+cada tecla. Se a base crescer, o ponto de troca é
+`features/leads/application/filter-leads.ts` mais um parâmetro em `getLeads()`.
 
 **Server Actions em vez de rotas de API.** Não há consumidor externo nem regra
 de negócio que justifique uma API dedicada: o único cliente do backend é o
@@ -185,14 +189,14 @@ src/
     leads/
       components/           crm-view, cards-view, lead-form, lead-table,
                             lead-card, search-bar, send-welcome-button,
-                            origin-summary
+                            new-lead-button
       hooks/                use-lead-list — lista, filtros e mutações locais
       application/          casos de uso: get-leads, create-lead,
-                            send-welcome, filter-leads
+                            send-welcome, filter-leads, describe-failure
       data/                 supabase-lead-repository, resend-welcome-mailer,
                             welcome-email-template
-      types/                lead, lead-schema, results e as portas:
-                            lead-repository, welcome-mailer
+      types/                lead, lead-row, lead-schema, results, data-result
+                            e as portas: lead-repository, welcome-mailer
       actions.ts            Server Actions — adaptador de entrada
       dependencies.server.ts composition root
     auth/
@@ -214,7 +218,7 @@ src/
     utils/                  cn, formatação de data e iniciais
     env.ts                  leitura de env com falha explícita
   app/
-    layout.tsx              fontes (Fraunces/Inter), metadata
+    layout.tsx              fontes (Raleway/Inter), metadata
     globals.css             tokens @theme da identidade Olyra
     page.tsx                redireciona para /crm ou /login
     login/page.tsx          tela de login
@@ -251,7 +255,7 @@ e as rotas não mudam. O mesmo vale para trocar o Resend: a porta é
 - Cadastro de lead com validação (nome, email, origem)
 - Busca por nome ou email — sem acento e sem diferenciar maiúsculas
 - Filtro por origem
-- Resumo com total e contagem por origem
+- Cadastro em modal, aberto pelo botão “Novo lead”
 - Visualização em tabela (empilha em mobile, sem scroll horizontal) e em cards
 - Envio real de email de boas-vindas, com status persistido em `welcome_sent_at`
 - Estados de carregamento, vazio e erro em toda tela com dados

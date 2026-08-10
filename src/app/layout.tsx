@@ -1,12 +1,17 @@
 import type { Metadata, Viewport } from 'next'
-import { Fraunces, Inter } from 'next/font/google'
+import { Inter, Raleway } from 'next/font/google'
 
 import './globals.css'
 
-const fraunces = Fraunces({
+/**
+ * Raleway é a fonte do site da Olyra (clubolyra.com.br), usada aqui nos
+ * títulos. O corpo fica em Inter: em tabela densa e texto de interface ela é
+ * mais legível em tamanho pequeno do que uma fonte de display.
+ */
+const raleway = Raleway({
   subsets: ['latin'],
-  weight: ['500', '600'],
-  variable: '--font-fraunces',
+  weight: ['500', '600', '700'],
+  variable: '--font-raleway',
   display: 'swap',
 })
 
@@ -31,7 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="pt-BR"
-      className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
+      className={`${raleway.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-bg text-text">{children}</body>
     </html>

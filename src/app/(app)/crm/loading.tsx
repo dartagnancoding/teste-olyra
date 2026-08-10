@@ -10,8 +10,6 @@ export default function CrmLoading() {
       </div>
 
       <div className="flex flex-col gap-6">
-        <Skeleton className="h-20 w-full" />
-
         <div className="flex flex-col gap-3 sm:flex-row">
           <Skeleton className="h-11 flex-1" />
           <Skeleton className="h-11 w-full sm:w-56" />

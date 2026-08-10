@@ -152,9 +152,15 @@ entende `var()`, então os hex são repetidos à mão ali.
 
 ### Story 1.3 — Fontes
 
-**`src/app/layout.tsx`** carrega Fraunces (títulos) e Inter (corpo) via
-`next/font/google`, expondo cada uma como variável CSS (`--font-fraunces`,
-`--font-inter`). O `globals.css` então faz `--font-display: var(--font-fraunces)`.
+**`src/app/layout.tsx`** carrega Raleway (títulos) e Inter (corpo) via
+`next/font/google`, expondo cada uma como variável CSS (`--font-raleway`,
+`--font-inter`). O `globals.css` então faz `--font-display: var(--font-raleway)`.
+
+A escolha de Raleway não é gosto: é a fonte que o site da Olyra carrega. O
+projeto começou com Fraunces, uma serifada, pela leitura "artesanal" do spec —
+mas o site real é sem serifa, e coerência com a marca vale mais que a estética
+que a spec sugeriu. O corpo fica em Inter porque, em tabela densa e texto de
+interface, ela é mais legível em tamanho pequeno do que uma fonte de display.
 
 Por que essa indireção em vez de importar a fonte no CSS: `next/font` baixa e
 auto-hospeda os arquivos no build. Não há requisição para o Google em runtime,
@@ -620,8 +626,7 @@ recebe o formato sem arrastar junto o módulo de servidor.
 
 **`src/features/leads/components/crm-view.tsx`** é o Client Component que segura
 o estado. Ele é fino de propósito: chama `useLeadList(initialLeads)` e distribui
-o resultado para quatro filhos (`OriginSummary`, `SearchBar`, `LeadForm`,
-`LeadTable`).
+o resultado para três filhos (`SearchBar`, `NewLeadButton` e `LeadTable`).
 
 **`src/features/leads/hooks/use-lead-list.ts`** é onde o estado de fato vive, e o
 comentário no topo explica a decisão central:
@@ -639,11 +644,6 @@ vida do React — a regra do projeto é que `application` não conhece component
 
 O hook também expõe `isFiltered`, que é justamente o que o `CrmView` usa para
 escolher a mensagem certa de estado vazio.
-
-Um detalhe fácil de perder: `visibleLeads` é filtrado, mas `OriginSummary` recebe
-`leads` — a lista **completa**. Correto: o resumo mostra a composição da base
-inteira; se ele filtrasse junto, o total mudaria a cada tecla e deixaria de ser
-um resumo.
 
 O layout usa `lg:grid-cols-3` com o formulário em 1 coluna e a lista em 2, mais
 `lg:sticky lg:top-8` no cartão do formulário — ele acompanha a rolagem, então dá
@@ -772,23 +772,18 @@ demonstração, dá para ver exatamente por que falhou em vez de um "erro ao env
 sem informação. Está registrado no README e no spec. Para uso real: verificar um
 domínio da Olyra e trocar `RESEND_FROM`.
 
-### O extra: resumo por origem
+### O que entrou e depois saiu: o resumo por origem
 
-**`src/features/leads/components/origin-summary.tsx`** era a **melhoria opcional
-#1** do spec ("contador de leads por origem — rápido e mostra atenção a
-produto"). Foi a única das 5 opcionais implementada. Ordenação de tabela,
-exclusão, toast e export CSV ficaram de fora.
+Existiu aqui um `origin-summary.tsx` — a **melhoria opcional #1** do spec
+("contador de leads por origem"). Foi removido depois: para saber a composição
+da base já existe o filtro, e uma faixa fixa de contadores ocupava o topo da
+tela o tempo todo para responder uma pergunta que quase nunca é feita. Relatório
+é outra tela, não um enfeite permanente.
 
-Não tem `'use client'` — mas como é importado por `crm-view.tsx`, que é client,
-ele acaba compilado como client de qualquer forma. Na prática é um componente de
-apresentação puro: recebe a lista e renderiza. Usa `<dl>/<dt>/<dd>` porque é
-literalmente uma lista de definições: rótulo e valor. A contagem vem de
-`countByOrigin`, no mesmo arquivo puro do filtro, ordenada por total desc e, em
-caso de empate, alfabeticamente com `localeCompare(…, 'pt-BR')` — que ordena
-acentos corretamente.
-
-E `if (leads.length === 0) return null` — com a base vazia, um resumo mostrando
-zeros seria ruído; o componente simplesmente não aparece.
+Com isso, **nenhuma das 5 melhorias opcionais do spec sobreviveu**. O que entrou
+no lugar foram coisas que o spec não pediu e que pesam mais no uso diário:
+cadastro em modal, validação na borda do banco e erros com código
+diagnosticável.
 
 ---
 
@@ -916,7 +911,6 @@ Vale ter essa lista à mão, porque é onde a implementação tomou decisões pr
 | Variante `outline` no botão | discrição para "Enviar boas-vindas" |
 | `wordmark.tsx` + `icon.png` | logo oficial da Olyra, servida localmente, e favicon próprio |
 | `page-heading.tsx` | título e descrição das páginas, um só lugar |
-| `origin-summary.tsx` | melhoria opcional #1 do spec |
 | `demo-credentials.tsx` | quem avalia entra sem depender de receber a senha |
 | Bloco `prefers-reduced-motion` | acessibilidade de movimento |
 | `noUncheckedIndexedAccess` | rigor de tipo além do `strict` |

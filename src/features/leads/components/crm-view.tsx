@@ -4,7 +4,6 @@ import { useState } from 'react'
 
 import { LeadTable } from '@/features/leads/components/lead-table'
 import { NewLeadButton } from '@/features/leads/components/new-lead-button'
-import { OriginSummary } from '@/features/leads/components/origin-summary'
 import { SearchBar } from '@/features/leads/components/search-bar'
 import { useLeadList } from '@/features/leads/hooks/use-lead-list'
 import type { Lead } from '@/features/leads/types/lead'
@@ -14,7 +13,7 @@ type CrmViewProps = {
 }
 
 export function CrmView({ initialLeads }: CrmViewProps) {
-  const { leads, visibleLeads, filters, setFilters, addLead, updateLead, isFiltered } =
+  const { visibleLeads, filters, setFilters, addLead, updateLead, isFiltered } =
     useLeadList(initialLeads)
   const [created, setCreated] = useState<string | null>(null)
 
@@ -25,8 +24,6 @@ export function CrmView({ initialLeads }: CrmViewProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <OriginSummary leads={leads} />
-
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <SearchBar filters={filters} onChange={setFilters} className="flex-1" />
         <NewLeadButton onCreated={handleCreated} />

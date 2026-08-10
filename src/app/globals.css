@@ -33,8 +33,9 @@
   --color-success-soft: #edf4ef;
   --color-error-soft: #f7ecec;
 
-  /* Tipografia — as variáveis --font-fraunces/--font-inter vêm de next/font */
-  --font-display: var(--font-fraunces), Georgia, serif;
+  /* Tipografia — as variáveis --font-raleway/--font-inter vêm de next/font.
+     Raleway é a fonte do site da Olyra; Inter carrega o corpo e a tabela. */
+  --font-display: var(--font-raleway), system-ui, sans-serif;
   --font-body: var(--font-inter), system-ui, sans-serif;
 
   /* Forma — `--radius-md` alimenta as utilidades `rounded-md` do Tailwind */
@@ -68,7 +69,7 @@
   h2,
   h3 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
   }
 
   /* Um único anel de foco para o projeto inteiro, em tom da paleta */

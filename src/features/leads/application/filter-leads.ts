@@ -29,15 +29,3 @@ export function filterLeads(leads: Lead[], filters: LeadFilters): Lead[] {
     )
   })
 }
-
-export function countByOrigin(leads: Lead[]): Array<{ origin: string; total: number }> {
-  const counts = new Map<string, number>()
-
-  for (const lead of leads) {
-    counts.set(lead.origin, (counts.get(lead.origin) ?? 0) + 1)
-  }
-
-  return [...counts.entries()]
-    .map(([origin, total]) => ({ origin, total }))
-    .sort((a, b) => b.total - a.total || a.origin.localeCompare(b.origin, 'pt-BR'))
-}
