@@ -3,7 +3,11 @@
 Documento de leitura. Não é README nem spec — é a explicação, em linguagem
 humana, de **o que existe, por que existe e em que ordem foi construído**.
 
-Escrito depois de ler os 54 arquivos do projeto, o spec e o SQL, um por um.
+Escrito depois de ler os 61 arquivos de `src/`, o spec e o SQL, um por um.
+
+> **Atualizado** após duas reorganizações grandes: a divisão por feature em
+> Clean Architecture e a troca das rotas de API por Server Actions. A seção
+> "Depois da primeira versão" no fim conta essa parte.
 
 ---
 
@@ -23,11 +27,19 @@ O que faz o papel de user story são as **tarefas numeradas dos blocos**
 fatia entregável e verificável. Então é assim que este documento vai ler: cada
 tarefa do spec como se fosse uma story, e os arquivos que nasceram dela.
 
-Vale registrar também: **o histórico do git não conta essa história.** Só existe
-um commit (`6f91b29 Initial commit from Create Next App`) e todo o projeto está
-como alteração não commitada. A ordem descrita abaixo é a ordem lógica do spec,
-que é a ordem em que as dependências entre os arquivos exigem que tenha sido
-feito — não uma reconstituição de commits.
+Sobre o histórico do git: os blocos 1 a 4 **não** aparecem como commits. O
+projeto inteiro entrou de uma vez em `d931720`, e só depois disso o histórico
+passa a acompanhar as mudanças. A ordem descrita abaixo é a ordem lógica do
+spec — que é a ordem em que as dependências entre os arquivos exigem que tenha
+sido feito —, não uma reconstituição de commits.
+
+```
+0320f25  Server Actions no lugar das rotas de API
+c819cce  reorganização por feature em Clean Architecture
+8e8433a  troca para a secret key do Supabase
+d931720  o projeto inteiro (blocos 1 a 4)
+6f91b29  create-next-app
+```
 
 ---
 
@@ -46,29 +58,30 @@ enfeite — está escrito no spec logo na primeira seção.
 
 ## O mapa mental: as camadas
 
-Antes de ir arquivo por arquivo, a regra que organiza tudo. Existe uma direção
-única de dependência, e ela nunca é violada no código:
+Antes de ir arquivo por arquivo, a regra que organiza tudo. O código é dividido
+**por feature** (`leads`, `auth`), e cada feature tem quatro camadas com uma
+direção única de dependência:
 
 ```
-componente React
-   ↓ (chama)
-src/lib/leads/api.ts        ← único lugar do client que sabe o que é `fetch`
-   ↓ (HTTP)
-route handler em src/app/api/…
-   ↓ (chama)
-src/lib/db/leads.ts         ← implementação do contrato
-   ↓
-Supabase
+components/     a UI da feature
+     ↓ chama
+actions.ts      'use server' — autentica, valida, delega
+     ↓ chama
+application/    os casos de uso; a regra de negócio mora aqui
+     ↓ depende só de
+types/          os contratos (portas)
+     ↑ implementa
+data/           Supabase, Resend, cookie — o mundo lá fora
 ```
+
+Repare na direção das setas em torno de `types`: a `application` **não conhece**
+o `data`. Os dois apontam para o contrato no meio. É isso que permite trocar
+Supabase por Postgres sem que a regra de negócio perceba.
 
 E existe um atalho, só para a **leitura inicial** da página:
 
 ```
-Server Component (page.tsx)
-   ↓
-src/lib/leads/load-leads.ts
-   ↓
-src/lib/db/leads.ts → Supabase
+Server Component (page.tsx) → application/get-leads.ts → LeadRepository → Supabase
 ```
 
 Consequência prática: **nenhum componente de UI importa o cliente do banco.**
@@ -83,15 +96,15 @@ transforma esse import em erro de build. Voltaremos nisso.
 
 ### Story 1.1 — Criar o projeto
 
-O ponto de partida foi um `create-next-app` (é literalmente o único commit do
-repositório). Depois vieram as dependências.
+O ponto de partida foi um `create-next-app` (o commit `6f91b29`). Depois vieram
+as dependências.
 
 **`package.json`** — vale ler a lista de dependências como uma declaração de
 intenção, porque cada uma resolve um problema nomeado no spec:
 
 | Pacote | Para quê |
 |---|---|
-| `next` 15 + `react` 19 | App Router, Server Components |
+| `next` 15 + `react` 19 | App Router, Server Components, Server Actions |
 | `@supabase/supabase-js` | acesso ao Postgres |
 | `resend` | envio de email |
 | `zod` 4 | validação, compartilhada entre client e servidor |
@@ -133,9 +146,9 @@ e — no fim do arquivo — zera todas as animações sob
 real: quem configurou o sistema para reduzir movimento não vê nada se mexer.
 
 **A regra que amarra tudo:** nenhum componente escreve `#hex` ou `bg-green-500`.
-Verifiquei — a única exceção é `src/lib/email/welcome-template.ts`, e ela é
-justificada em comentário no próprio arquivo: cliente de email não entende
-`var()`, então os hex são repetidos à mão ali.
+Verifiquei — a única exceção é `features/leads/data/welcome-email-template.ts`,
+e ela é justificada em comentário no próprio arquivo: cliente de email não
+entende `var()`, então os hex são repetidos à mão ali.
 
 ### Story 1.3 — Fontes
 
@@ -171,15 +184,16 @@ um único lead.
 
 (Essas são as chaves novas do Supabase. A `service_role` virou **secret key** e
 a `anon` virou **publishable key**; as antigas ainda funcionam, mas saem de
-circulação no fim de 2026.)
+circulação no fim de 2026. O Supabase ainda recusa a secret key com 401 se a
+requisição vier de um navegador — uma barreira a mais, de graça.)
 
 O seed foi reescrito em relação ao spec. O spec tinha um `insert ... values`
 simples, que duplicaria os 6 leads a cada execução. A versão final usa
 `select ... where not exists`, checando por email — **idempotente**. Rodar de
 novo não faz nada.
 
-**`src/types/lead.ts`** — o vocabulário do domínio. `ORIGINS` é um array
-`as const`, o que permite derivar o tipo `Origin` dele
+**`src/features/leads/types/lead.ts`** — o vocabulário do domínio. `ORIGINS` é um
+array `as const`, o que permite derivar o tipo `Origin` dele
 (`(typeof ORIGINS)[number]`). Uma lista, uma fonte de verdade: o select do
 formulário, o filtro da busca e o schema Zod leem todos daqui. Adicionar
 "LinkedIn" é uma linha.
@@ -188,6 +202,9 @@ Repare que `Lead.origin` é `string`, mas `NewLead.origin` é `Origin`. Isso é
 intencional e correto: na **escrita** você exige uma origem válida da lista; na
 **leitura**, o banco pode devolver algo antigo que não está mais na lista, e a
 interface não pode quebrar por isso.
+
+(As colunas do banco são `name` e `origin`, em inglês, como todo identificador
+do código. Os rótulos na tela continuam em português.)
 
 ### Story 1.5 — Cliente Supabase
 
@@ -204,40 +221,27 @@ no topo do módulo. Se fosse congelado, o `next build` — que executa módulos 
 falharia com um build vermelho e críptico. Do jeito que está, falha na hora do
 uso, com mensagem clara.
 
-**`src/lib/db/client.ts`** diverge do spec de duas formas, e as duas são upgrade:
+**`src/lib/supabase/client.ts`** diverge do spec de duas formas, e as duas são
+upgrade:
 
 O spec pedia `export const db = createClient(...)` — um cliente criado no import.
-O código tem `getDb()`, que cria na primeira chamada e guarda
+O código tem `getSupabase()`, que cria na primeira chamada e guarda
 (`client ??= createClient(...)`). Criação **preguiçosa**, pelo mesmo motivo do
 `env.ts`: o build não precisa dos segredos.
 
 E a primeira linha do arquivo é `import 'server-only'`. Esse pacote não faz nada
 em runtime — ele existe para explodir o build se um componente `'use client'`
 importar o módulo. É a barreira que garante que a secret key nunca chega ao
-navegador. O mesmo import aparece em `auth.ts`, `db/leads.ts`,
-`leads/load-leads.ts` e `email/send-welcome-email.ts`.
+navegador. Hoje esse import aparece em **11 arquivos**: todo o `data/` e o
+`application/` das duas features, os dois composition roots e este cliente.
 
-**`src/lib/db/types.ts`** também não estava no spec. Define um contrato:
-
-```ts
-export type LeadRepository = {
-  getAll(): Promise<Lead[]>
-  getById(id: string): Promise<Lead | null>
-  create(data: NewLead): Promise<Lead>
-  markWelcomeSent(id: string, sentAt: Date): Promise<Lead>
-}
-```
-
-**`src/lib/db/leads.ts`** é a implementação concreta em Supabase. A separação
-custa um arquivo de 12 linhas e compra o seguinte: trocar Supabase por Prisma,
-Neon ou o que for é reescrever `leads.ts` e nada mais. As rotas e a UI dependem
-do tipo, não do Supabase. Quatro métodos, cada um com o mesmo padrão — chama,
-checa `error`, lança `new Error(error.message)` se houver.
+Ele mora em `lib/` e não dentro de uma feature porque é conexão compartilhada —
+se amanhã existir uma feature `users`, ela usa a mesma.
 
 ### Story 1.6 — Sessão
 
-**`src/lib/auth.ts`** é o arquivo que mais se afasta do spec, e vale entender
-por quê.
+**`src/features/auth/data/cookie-session-store.ts`** é o arquivo que mais se
+afasta do spec, e vale entender por quê.
 
 O spec propunha guardar o `SESSION_SECRET` **dentro do cookie** e comparar
 igualdade direta. Funciona, mas tem dois problemas: o segredo vai para o
@@ -247,7 +251,7 @@ tempo.
 O que foi feito:
 
 ```ts
-function signSession(user: string): string {
+function sign(user: string): string {
   return createHmac('sha256', requireEnv('SESSION_SECRET')).update(user).digest('hex')
 }
 ```
@@ -263,21 +267,30 @@ tiverem tamanhos diferentes.
 O cookie: `httpOnly` (JavaScript não lê), `sameSite: 'lax'` (não vai em
 requisição cross-site), `secure` em produção (só HTTPS), 8 horas de vida.
 
-### Story 1.7 — Rotas de auth
+Esse arquivo implementa a porta `SessionStore`; quem checa usuário e senha é o
+`env-credentials-checker.ts`, implementando `CredentialsChecker`. São duas portas
+separadas de propósito — trocar "credencial fixa em env" por "tabela `users` com
+hash" mexe em uma sem tocar na outra.
 
-**`src/app/api/auth/login/route.ts`** — 20 linhas, e a estrutura delas se repete
-em todas as rotas do projeto:
+### Story 1.7 — Entrar e sair
 
-1. lê o body com `.catch(() => null)` — JSON malformado vira `null`, não crash;
-2. valida com `loginSchema.safeParse` — sem sessão de exceção;
-3. `400` se o corpo é inválido, `401` se a credencial está errada;
-4. sucesso → `createSession()` → `{ ok: true }`.
+**`src/features/auth/application/session.ts`** expõe `login`, `logout` e
+`isAuthenticated`. Nenhum dos três sabe o que é cookie ou variável de ambiente —
+falam só com as duas portas.
+
+**`src/features/auth/actions.ts`** é a porta de entrada. O `loginAction`:
+
+1. valida com `loginSchema.safeParse` — o input chega como `unknown`;
+2. devolve `{ ok: false, message }` se o corpo é inválido ou a credencial errada;
+3. sucesso → a sessão já foi criada pela application → `{ ok: true }`.
 
 Repare que a mensagem de erro é sempre "Usuário ou senha inválidos" — nunca
 "usuário não existe". Não se entrega ao atacante a informação de qual metade
 estava certa.
 
-**`logout/route.ts`** tem 7 linhas: destrói a sessão, responde ok.
+(Na primeira versão isso era `src/app/api/auth/login/route.ts`, um route handler
+que devolvia 400/401. Virou Server Action — a última seção do documento explica
+a troca.)
 
 ### Story 1.8 — Tela de login
 
@@ -289,13 +302,14 @@ se você já está autenticado, `redirect('/crm')`. Não faz sentido mostrar log
 para quem já entrou. Depois monta o layout — cartão de 400px, centralizado,
 wordmark e subtítulo — e coloca `<LoginForm />` dentro.
 
-**`src/components/auth/login-form.tsx`** (client) tem o estado. React Hook Form
-com `zodResolver(loginSchema)`. Três estados de erro tratados separadamente:
+**`src/features/auth/components/login-form.tsx`** (client) tem o estado. React
+Hook Form com `zodResolver(loginSchema)`. Três estados de erro tratados
+separadamente:
 
 - erro de **campo** (vazio) → vem do Zod, aparece sob o campo;
-- erro do **servidor** (401) → `serverError`, aparece em caixa vermelha acima do
-  botão;
-- erro de **rede** (o `fetch` explodiu) → mensagem específica,
+- erro do **servidor** (credencial inválida) → `serverError`, em caixa vermelha
+  acima do botão;
+- erro de **rede** (a chamada não completou) → mensagem específica,
   "Falha de conexão. Verifique sua internet".
 
 Esse terceiro caso é o que quase todo mundo esquece. Sem ele, tirar o wi-fi e
@@ -303,6 +317,12 @@ clicar em Entrar deixa o botão travado em "Entrando…" para sempre.
 
 O `noValidate` no `<form>` desliga a validação nativa do navegador, para que o
 usuário veja as mensagens em português do Zod e não as do Chrome em inglês.
+
+**`src/features/auth/components/demo-credentials.tsx`** mostra usuário e senha na
+própria tela — decisão consciente, porque é painel de demonstração e quem avalia
+precisa entrar. Ele não lê `process.env`: chama `getDemoCredentials()` na
+application. Assim, apagar o bloco em uso real é devolver `null` lá, sem tocar na
+UI.
 
 ### Story 1.9 — Guard das rotas protegidas
 
@@ -341,9 +361,13 @@ Quatro arquivos, e a divisão entre eles explica bem a filosofia do projeto:
 A lição: só duas coisas viraram client, e cada uma pelo menor motivo possível. O
 header não virou client inteiro por causa do link ativo.
 
-**`brand/wordmark.tsx`** não estava no spec. É a marca "Olyra" com um SVG de
-folha desenhado à mão. O mesmo desenho reaparece em `empty-state.tsx` — a folha
-é o motivo botânico que amarra a identidade.
+Esses quatro ficam em `src/components/layout/` e não dentro de uma feature —
+são o chassi da aplicação, não pertencem a leads nem a auth. (O `logout-button`
+chama a action de auth, mas continua sendo peça de layout.)
+
+**`components/brand/wordmark.tsx`** não estava no spec. É a marca "Olyra" com um
+SVG de folha desenhado à mão. O mesmo desenho reaparece em `empty-state.tsx` — a
+folha é o motivo botânico que amarra a identidade.
 
 **Estado ao fim do Bloco 1:** dá para entrar, o header aparece, e tentar acessar
 `/crm` sem sessão joga para o login.
@@ -354,38 +378,71 @@ folha desenhado à mão. O mesmo desenho reaparece em `empty-state.tsx` — a fo
 
 > Objetivo: cadastrar e listar leads.
 
-### Story 2.1 — API de leads
+### Story 2.1 — O caminho de escrita
 
-**`src/app/api/leads/route.ts`** — dois handlers, `GET` e `POST`. Ambos começam
-com a mesma checagem de sessão e devolvem `401` sem ela.
+Na primeira versão isto era `src/app/api/leads/route.ts`, com `GET` e `POST`,
+status codes e JSON. Hoje são duas peças:
 
-O que chama atenção são os códigos de status escolhidos:
+**`src/features/leads/actions.ts`** — o adaptador. `createLeadAction` faz três
+coisas e nada mais:
 
-| Situação | Status |
-|---|---|
-| sem sessão | `401` |
-| corpo inválido (falha do Zod) | `422` + `fields` com os erros por campo |
-| lead criado | `201` |
-| banco fora do ar | `502` |
+```ts
+if (!(await isAuthenticated())) return { ok: false, message: 'Sessão expirada…' }
 
-`422` em vez de `400` para validação, e `502` em vez de `500` para falha do
-banco. `502` diz "eu estou bem, quem está atrás de mim que falhou" — é a
-informação certa para quem vai debugar.
+const parsed = leadSchema.safeParse(input)
+if (!parsed.success) return { ok: false, message: 'Dados inválidos.' }
 
-E o `catch` nunca vaza a mensagem do Supabase para o cliente: devolve
-"Não foi possível cadastrar o lead." A mensagem técnica fica no servidor.
+return createLead(parsed.data)
+```
 
-### Story 2.2 — Validação
+Autentica, valida, delega. Nenhuma regra vive aqui.
 
-**`src/lib/validations.ts`** guarda os três schemas do projeto: `leadSchema`,
-`loginSchema` e `sendWelcomeSchema`.
+**`src/features/leads/application/create-lead.ts`** — o caso de uso. Chama o
+repositório e transforma falha em valor de retorno:
 
-Este é um arquivo pequeno com um papel grande: **é o mesmo schema usado no
-formulário (client) e no route handler (servidor)**. O formulário valida para dar
-feedback imediato; o servidor valida porque o formulário é só uma sugestão — dá
-para mandar `POST` direto por curl.
+```ts
+try {
+  return { ok: true, lead: await leadRepository.create(input) }
+} catch (error) {
+  console.error('[leads] falha ao cadastrar', error)
+  return { ok: false, message: 'Não foi possível cadastrar o lead.' }
+}
+```
 
-O `leadSchema` faz mais do que o spec pedia. Além de validar, ele **normaliza**:
+Duas coisas para reparar. Primeiro: o `catch` **nunca vaza a mensagem do
+Supabase** para o cliente — a técnica fica no `console.error` do servidor, a
+humana vai para a tela. Segundo: o parâmetro da action é `input: unknown`, não
+`LeadInput`. Isso não é preguiça de tipo; é a afirmação de que **aquilo que
+chega ali não é confiável até passar pelo Zod**.
+
+### Story 2.2 — Validação: por que o Zod ficou mais importante, não menos
+
+**`src/features/leads/types/lead-schema.ts`** e
+**`src/features/auth/types/auth.ts`** guardam os três schemas do projeto.
+
+Este é o ponto do projeto que mais gera mal-entendido, então vale ser explícito:
+**tirar a API não diminuiu o papel do Zod — aumentou.**
+
+Server Action não é função privada. Ela é um **endpoint público**: o Next gera um
+identificador para ela e qualquer pessoa pode invocá-la com o payload que quiser,
+sem nunca abrir sua interface. Do ponto de vista de segurança, é exatamente a
+mesma superfície que a rota `POST /api/leads` era. Se o `safeParse` sair, entra
+lixo no banco — ou pior.
+
+Daí o desenho: a action recebe `unknown` e **só confia no que sai do `safeParse`**.
+
+E o schema faz quatro trabalhos ao mesmo tempo, o que é o motivo real de ele
+existir num arquivo só:
+
+1. **Feedback no formulário** — o `zodResolver` do React Hook Form usa este mesmo
+   schema para mostrar "Email inválido" embaixo do campo.
+2. **Defesa no servidor** — a action revalida, porque o formulário é só uma
+   sugestão educada.
+3. **Normalização** — `.trim()` e `.toLowerCase()` fazem ` Mariana ` virar
+   `Mariana` e `MARIANA@X.COM` virar `mariana@x.com` **antes de chegar ao banco**.
+   Como vive no schema, acontece nos dois lados de graça.
+4. **Fonte do tipo** — `type LeadInput = z.infer<typeof leadSchema>`. O tipo é
+   *derivado* da validação, então é impossível o tipo e a regra divergirem.
 
 ```ts
 name:   z.string().trim().min(2, 'Informe o nome completo'),
@@ -393,9 +450,8 @@ email:  z.email('Email inválido').trim().toLowerCase(),
 origin: z.enum(ORIGINS, { message: 'Selecione uma origem' }),
 ```
 
-O `.trim()` e o `.toLowerCase()` significam que ` Mariana ` vira `Mariana`, e
-`MARIANA@X.COM` vira `mariana@x.com` **antes de chegar ao banco**. Como a
-normalização vive no schema, ela acontece nos dois lados de graça.
+O `origin` lê de `ORIGINS`, o mesmo array que alimenta o select — adicionar uma
+origem nova é mexer em um lugar e a validação acompanha sozinha.
 
 (Detalhe de versão: é `z.email(...)`, não `z.string().email(...)` como no spec.
 Zod 4 moveu os validadores de string para o topo.)
@@ -419,6 +475,10 @@ classes compartilhada entre `input` e `select`. O comentário no arquivo diz o
 porquê em uma linha: "para que os dois nunca divirjam". Sem isso, alguém muda a
 altura do input de `h-11` para `h-12` e o select fica desalinhado no formulário.
 
+Esses nove vivem fora das features, em `src/components/ui/`, porque são **átomos
+e moléculas** — não pertencem a leads nem a auth. É a divisão que o
+`yasuho-code` pede: átomo e molécula compartilhados, organismo dentro da feature.
+
 **`button.tsx`** e **`badge.tsx`** usam CVA (`class-variance-authority`), como o
 spec pediu, porque têm variantes. O botão ganhou uma variante que não estava no
 spec — `outline` — e é a que "Enviar boas-vindas" usa: precisava de algo mais
@@ -432,17 +492,27 @@ de alerta junto, porque quem não distingue vermelho precisa de outro sinal.
 
 ### Story 2.4 — Formulário de cadastro
 
-**`src/components/leads/lead-form.tsx`**. Mesmo desenho do login: RHF + Zod,
-`isSubmitting` no botão, erro do servidor em faixa.
+**`src/features/leads/components/lead-form.tsx`**. Mesmo desenho do login: RHF +
+Zod, `isSubmitting` no botão, mensagem de status em faixa.
 
 Duas escolhas concretas:
 
 - `mode: 'onBlur'` — a validação dispara ao **sair** do campo, não a cada tecla.
   Validar enquanto se digita mostra "Email inválido" quando a pessoa digitou
   `m` e ainda está no meio da palavra. É agressivo. `onBlur` espera ela terminar.
-- `onCreated(await createLead(values))` — o componente **não sabe** o que é
-  `fetch`. Chama a função de `lib/leads/api.ts` e entrega o lead criado para o
-  pai via callback.
+- O componente chama `createLeadAction(values)` e lê o resultado. Não existe
+  `fetch`, não existe cast, não existe `try/catch`:
+
+```tsx
+const result = await createLeadAction(values)
+
+if (!result.ok) {
+  setStatus({ tone: 'error', message: result.message })
+  return
+}
+
+onCreated(result.lead)
+```
 
 Fluxo de sucesso: adiciona o lead à lista, `reset()` limpa o formulário,
 mensagem verde "Lead cadastrado com sucesso." aparece com `role="status"`.
@@ -451,9 +521,13 @@ mensagem verde "Lead cadastrado com sucesso." aparece com `role="status"`.
 
 Duas peças, e a separação entre elas é o ponto interessante.
 
-**`src/lib/leads/filter-leads.ts`** — **função pura**, sem React, sem I/O. Recebe
-uma lista e filtros, devolve uma lista. Dá para testar em um `node -e` sem subir
-nada.
+**`src/features/leads/application/filter-leads.ts`** — **função pura**, sem
+React, sem I/O. Recebe uma lista e filtros, devolve uma lista. Dá para testar em
+um `node -e` sem subir nada.
+
+Ela está em `application` e não em `data` porque é regra de domínio: o que conta
+como "encontrar um lead" é decisão de produto, não de infraestrutura. E é o único
+arquivo de `application` sem `server-only` — roda no navegador, junto do hook.
 
 Dentro dela, a função `normalize` faz algo que o spec não pediu:
 
@@ -467,22 +541,22 @@ detalhe — é a diferença entre a busca funcionar e não funcionar na prática
 
 O `NFD` decompõe "ç" em "c" + cedilha, e o regex remove os diacríticos.
 
-**`src/components/leads/search-bar.tsx`** — o componente. É *controlado*: não tem
-estado próprio, recebe `filters` e `onChange`. Isso é o que permite as duas telas
-(`/crm` e `/cards`) reusarem o mesmo componente sem duplicar lógica.
+**`src/features/leads/components/search-bar.tsx`** — o componente. É *controlado*:
+não tem estado próprio, recebe `filters` e `onChange`. Isso é o que permite as
+duas telas (`/crm` e `/cards`) reusarem o mesmo componente sem duplicar lógica.
 
 Os labels usam `sr-only` — visualmente escondidos, presentes para leitor de tela.
 E os `id` vêm de `useId()`, então se o componente aparecesse duas vezes na mesma
 página não haveria colisão de id.
 
-Sobre **filtrar no client**: o spec justificou ("a lista é pequena") e o README
-completa dizendo onde trocar se a base crescer — `filter-leads.ts` mais um
-parâmetro de query no `GET`. A troca está localizada em um arquivo.
+Sobre **filtrar no client**: o spec justificou ("a lista é pequena"). Se a base
+crescer, o ponto de troca é este arquivo mais um parâmetro no `getLeads()`. A
+mudança fica localizada.
 
 ### Story 2.6 — Tabela
 
-**`src/components/leads/lead-table.tsx`**. O requisito difícil do spec estava
-aqui: *"mobile: tabela vira lista de linhas empilhadas (não usar scroll
+**`src/features/leads/components/lead-table.tsx`**. O requisito difícil do spec
+estava aqui: *"mobile: tabela vira lista de linhas empilhadas (não usar scroll
 horizontal)"*.
 
 A solução foi renderizar **duas árvores** e alternar por CSS:
@@ -510,13 +584,13 @@ Aqui está a decisão arquitetural mais importante do bloco.
 
 **`src/app/(app)/crm/page.tsx`** é Server Component. Ele:
 
-1. chama `loadLeads()` no servidor;
+1. chama `getLeads()` no servidor;
 2. se deu certo, renderiza `<CrmView initialLeads={result.leads} />`;
 3. se deu errado, renderiza `<ErrorState>` com a mensagem.
 
-**`src/lib/leads/load-leads.ts`** é o que torna o item 3 possível. Em vez de
-deixar a exceção subir (o que daria uma tela de erro 500 do Next), ela captura e
-devolve um objeto discriminado:
+**`src/features/leads/application/get-leads.ts`** é o que torna o item 3
+possível. Em vez de deixar a exceção subir (o que daria uma tela de erro 500 do
+Next), ela captura e devolve um objeto discriminado:
 
 ```ts
 type LeadsResult = { ok: true; leads: Lead[] } | { ok: false; message: string }
@@ -527,13 +601,17 @@ O comentário no arquivo resume: *"Falha de banco vira estado de tela, não erro
 footer e a navegação continuam lá; só a lista vira uma caixa explicando o que
 houve.
 
-**`src/components/leads/crm-view.tsx`** é o Client Component que segura o estado.
-Ele é fino de propósito: chama `useLeadList(initialLeads)` e distribui o
-resultado para quatro filhos (`OriginSummary`, `SearchBar`, `LeadForm`,
+Esses tipos moram em `types/results.ts` por um motivo prático: eles atravessam a
+fronteira servidor→client. Como são tipos puros, somem na compilação — o client
+recebe o formato sem arrastar junto o módulo de servidor.
+
+**`src/features/leads/components/crm-view.tsx`** é o Client Component que segura
+o estado. Ele é fino de propósito: chama `useLeadList(initialLeads)` e distribui
+o resultado para quatro filhos (`OriginSummary`, `SearchBar`, `LeadForm`,
 `LeadTable`).
 
-**`src/hooks/use-lead-list.ts`** é onde o estado de fato vive, e o comentário no
-topo explica a decisão central:
+**`src/features/leads/hooks/use-lead-list.ts`** é onde o estado de fato vive, e o
+comentário no topo explica a decisão central:
 
 > Guarda a lista recebida do servidor e a mantém sincronizada após cadastro ou
 > envio de boas-vindas, **sem refazer o fetch** — a lista é pequena e a mutação
@@ -541,7 +619,10 @@ topo explica a decisão central:
 
 Isso é o padrão do projeto: o servidor entrega a lista inicial; toda mutação
 devolve o registro afetado; o client aplica localmente (`addLead`, `updateLead`).
-Nunca há um `GET /api/leads` depois de um `POST`. A tela responde na hora.
+Nunca há uma releitura depois de uma escrita. A tela responde na hora.
+
+O hook fica em `hooks/` e não em `application/` porque está preso ao ciclo de
+vida do React — a regra do projeto é que `application` não conhece componente.
 
 O hook também expõe `isFiltered`, que é justamente o que o `CrmView` usa para
 escolher a mensagem certa de estado vazio.
@@ -561,18 +642,18 @@ para cadastrar vários leads seguidos sem subir a página.
 
 ### Story 3.1 e 3.2 — Cards
 
-**`src/components/leads/lead-card.tsx`** — avatar circular com as iniciais
-(`getInitials` de `lib/utils/format.ts`, que pega a primeira letra do primeiro e
-do último nome), nome em serifada, email, badge de origem, data, e o botão no
-rodapé.
+**`src/features/leads/components/lead-card.tsx`** — avatar circular com as
+iniciais (`getInitials` de `lib/utils/format.ts`, que pega a primeira letra do
+primeiro e do último nome), nome em serifada, email, badge de origem, data, e o
+botão no rodapé.
 
 Dois detalhes de construção: `h-full` + `flex-col` + `mt-auto` no rodapé fazem
 todos os cards da linha terminarem na mesma altura com o botão alinhado, mesmo
 com nomes de tamanhos diferentes. E `break-all` no email evita que um endereço
 longo estoure o card.
 
-**`src/components/leads/cards-view.tsx`** — grid de 1/2/3 colunas e a animação
-de entrada:
+**`src/features/leads/components/cards-view.tsx`** — grid de 1/2/3 colunas e a
+animação de entrada:
 
 ```tsx
 initial={{ opacity: 0, y: reduceMotion ? 0 : 12 }}
@@ -593,7 +674,7 @@ A lista é `<ul>/<li>` — semanticamente é uma lista de contatos, não uma pil
 
 ### Story 3.4 — Template do email
 
-**`src/lib/email/welcome-template.ts`** exporta três coisas:
+**`src/features/leads/data/welcome-email-template.ts`** exporta três coisas:
 `welcomeSubject`, `welcomeText` e `welcomeHtml`.
 
 Três, e não uma, porque um email decente manda **as duas versões** — HTML e texto
@@ -610,49 +691,54 @@ E tem `escapeHtml()`. Um lead cadastrado como `<script>alert(1)</script>` teria 
 nome injetado direto no HTML do email sem isso. É pequeno, e é a diferença entre
 um template e um template seguro.
 
-### Story 3.5 — A rota de envio
+O arquivo mora em `data/` porque é detalhe de como o email sai — se trocarmos o
+Resend por um provedor com templates próprios, ele sai junto.
 
-**`src/app/api/send-welcome/route.ts`** é a rota mais cuidadosa do projeto,
-porque é a única que faz duas coisas que podem falhar independentemente: mandar
-o email e gravar no banco.
+### Story 3.5 — O caso de uso mais cuidadoso do projeto
+
+**`src/features/leads/application/send-welcome.ts`** é o único lugar que faz duas
+coisas que podem falhar **independentemente**: mandar o email e gravar no banco.
 
 A sequência:
 
-1. sem sessão → `401`;
-2. `leadId` não é UUID → `422`;
-3. lead não existe → `404`;
-4. **já tem `welcome_sent_at`** → devolve o lead sem reenviar;
-5. envia pelo Resend; se recusar → `502` com a mensagem real do Resend;
-6. marca `welcome_sent_at` no banco e devolve o lead.
+1. lead não existe → `{ ok: false, message: 'Lead não encontrado.' }`;
+2. **já tem `welcome_sent_at`** → devolve o lead sem reenviar;
+3. envia pelo mailer; se recusar → `{ ok: false }` com a mensagem real do Resend;
+4. marca `welcome_sent_at` e devolve o lead.
 
-O passo 4 é uma **proteção contra duplo envio** que o spec não pediu. Dois
+O passo 2 é uma **proteção contra duplo envio** que o spec não pediu. Dois
 cliques rápidos, ou duas abas abertas, não geram dois emails para o lead.
 
-O passo 6 tem o tratamento mais interessante do arquivo:
+O passo 4 tem o tratamento mais interessante do arquivo:
 
 ```ts
-} catch {
-  // O email já saiu; devolver 200 com o lead marcado em memória evita que o
-  // operador reenvie por achar que falhou.
-  return NextResponse.json({ lead: { ...lead, welcome_sent_at: new Date().toISOString() } })
+} catch (error) {
+  // O email já saiu; devolver sucesso com o lead marcado em memória evita que
+  // o operador reenvie por achar que falhou.
+  console.error('[leads] email enviado, mas falhou ao marcar', error)
+  return { ok: true, lead: { ...lead, welcome_sent_at: new Date().toISOString() } }
 }
 ```
 
-Se o email saiu mas o `UPDATE` falhou, a rota **não** devolve erro. Devolver erro
-faria o operador clicar de novo e o lead receber dois emails. Devolver sucesso
-significa que o banco fica temporariamente desatualizado — o que se conserta com
-um refresh. Entre "email duplicado para o cliente" e "estado desatualizado até
-recarregar", escolheu-se o segundo. Essa é a decisão certa, e está documentada em
-comentário no lugar onde alguém vai lê-la.
+Se o email saiu mas o `UPDATE` falhou, o caso de uso **não** devolve erro.
+Devolver erro faria o operador clicar de novo e o lead receber dois emails.
+Devolver sucesso significa que o banco fica temporariamente desatualizado — o que
+se conserta com um refresh. Entre "email duplicado para o cliente" e "estado
+desatualizado até recarregar", escolheu-se o segundo. Essa é a decisão certa, e
+está documentada em comentário no lugar onde alguém vai lê-la.
 
-**`src/lib/email/send-welcome-email.ts`** encapsula o Resend e devolve
-`{ ok: true } | { ok: false; message }` — o mesmo padrão de `load-leads.ts`.
-Falha esperada de serviço externo não vira exceção; vira valor de retorno.
+O detalhe que faz essa regra valer a pena arquiteturalmente: ela orquestra
+`leadRepository` e `welcomeMailer`, e **não conhece nenhum dos dois
+concretamente** — só as portas. Trocar Supabase e Resend não muda uma linha aqui.
+
+**`src/features/leads/data/resend-welcome-mailer.ts`** implementa `WelcomeMailer`
+e devolve `{ ok: true } | { ok: false; message }`. Falha esperada de serviço
+externo não vira exceção; vira valor de retorno.
 
 ### Story 3.6 — O botão
 
-**`src/components/leads/send-welcome-button.tsx`**. Um componente, usado nos dois
-lugares (tabela e card), com três estados possíveis:
+**`src/features/leads/components/send-welcome-button.tsx`**. Um componente, usado
+nos dois lugares (tabela e card), com três estados possíveis:
 
 - `welcome_sent_at` preenchido → não é botão, é um `<Badge tone="success">`
   com um check. Não dá para clicar porque não há o que fazer.
@@ -675,17 +761,18 @@ domínio da Olyra e trocar `RESEND_FROM`.
 
 ### O extra: resumo por origem
 
-**`src/components/leads/origin-summary.tsx`** era a **melhoria opcional #1** do
-spec ("contador de leads por origem — rápido e mostra atenção a produto"). Foi
-a única das 5 opcionais implementada. Ordenação de tabela, exclusão, toast e
-export CSV ficaram de fora.
+**`src/features/leads/components/origin-summary.tsx`** era a **melhoria opcional
+#1** do spec ("contador de leads por origem — rápido e mostra atenção a
+produto"). Foi a única das 5 opcionais implementada. Ordenação de tabela,
+exclusão, toast e export CSV ficaram de fora.
 
 Não tem `'use client'` — mas como é importado por `crm-view.tsx`, que é client,
 ele acaba compilado como client de qualquer forma. Na prática é um componente de
-apresentação puro: recebe a lista e renderiza. Usa `<dl>/<dt>/<dd>` porque é literalmente uma lista de definições: rótulo e
-valor. A contagem vem de `countByOrigin` no mesmo arquivo puro do filtro,
-ordenada por total desc e, em caso de empate, alfabeticamente com
-`localeCompare(…, 'pt-BR')` — que ordena acentos corretamente.
+apresentação puro: recebe a lista e renderiza. Usa `<dl>/<dt>/<dd>` porque é
+literalmente uma lista de definições: rótulo e valor. A contagem vem de
+`countByOrigin`, no mesmo arquivo puro do filtro, ordenada por total desc e, em
+caso de empate, alfabeticamente com `localeCompare(…, 'pt-BR')` — que ordena
+acentos corretamente.
 
 E `if (leads.length === 0) return null` — com a base vazia, um resumo mostrando
 zeros seria ruído; o componente simplesmente não aparece.
@@ -711,6 +798,88 @@ isso.
 
 ---
 
+## Depois da primeira versão: as duas reorganizações
+
+O projeto entrou inteiro em `d931720`. Depois disso vieram duas mudanças
+estruturais que valem ser contadas, porque explicam por que os caminhos deste
+documento não batem com o spec.
+
+### 1. De pastas técnicas para features (`c819cce`)
+
+A primeira versão seguia a árvore do spec: `components/leads/`, `lib/leads/`,
+`hooks/`, `types/`. Funcionava, mas espalhava uma mesma feature por quatro
+pastas — mexer em leads significava abrir quatro lugares.
+
+Passou a ser dividido **por feature**, cada uma com quatro camadas:
+
+```
+features/leads/
+  components/   UI da feature
+  hooks/        estado preso ao React
+  application/  casos de uso — a regra
+  data/         Supabase, Resend — o mundo lá fora
+  types/        contratos (portas) e tipos de domínio
+```
+
+O ponto não é a pasta, é a **direção da dependência**. `application` depende só
+de `types`; `data` implementa `types`. Os dois apontam para o contrato, e nunca
+um para o outro.
+
+As portas, todas declaradas como `type`:
+
+| Porta | Implementação hoje |
+|---|---|
+| `LeadRepository` | `data/supabase-lead-repository.ts` |
+| `WelcomeMailer` | `data/resend-welcome-mailer.ts` |
+| `SessionStore` | `auth/data/cookie-session-store.ts` |
+| `CredentialsChecker` | `auth/data/env-credentials-checker.ts` |
+
+E um arquivo por feature escolhe a implementação: `dependencies.server.ts` para
+leads, `dependencies.ts` para auth. **Trocar Supabase por Postgres é escrever
+`data/postgres-lead-repository.ts` e mudar uma linha nesse arquivo.** A
+application, os componentes e as telas não percebem.
+
+### 2. De rotas de API para Server Actions (`0320f25`)
+
+A primeira versão tinha quatro route handlers e um "gateway HTTP" no client que
+embrulhava `fetch`. O raciocínio para tirar tudo foi simples: **não existe
+consumidor externo.** O único cliente do backend é o próprio front. Uma API REST
+ali era serializar JSON, escolher status codes e manter uma camada de transporte
+para falar consigo mesmo.
+
+O que sumiu:
+
+```
+app/api/leads/route.ts
+app/api/send-welcome/route.ts
+app/api/auth/login/route.ts
+app/api/auth/logout/route.ts
+features/leads/data/http-lead-gateway.ts
+features/leads/types/lead-gateway.ts     ← a porta que só abstraía o fetch
+features/leads/dependencies.ts           ← sem gateway, não sobrou o que compor
+```
+
+O que entrou: `features/leads/actions.ts` e `features/auth/actions.ts`.
+
+Três ganhos concretos:
+
+- **Tipagem de ponta a ponta.** O gateway fazia
+  `(await response.json()) as { lead: Lead }` — um cast não verificado, o ponto
+  mais fraco de tipagem do projeto. Sumiu.
+- **Funciona sem JavaScript.** Server Action é o caminho de progressive
+  enhancement do Next.
+- **Menos código.** 216 linhas a menos, 130 a mais.
+
+E o que **não** mudou: `application`, `data` e `types`. Só o adaptador de entrada
+foi trocado — que era exatamente o que a arquitetura da mudança anterior prometia.
+
+Uma coisa que foi deliberadamente **mantida**: a checagem de sessão e o
+`safeParse` continuam nas actions. Server Action é endpoint público; tratá-la
+como "função interna" e tirar a validação seria abrir um buraco. Está comentado
+no `actions.ts` para quem for ler entender que é escolha, não sobra.
+
+---
+
 ## O que existe no código e não estava no spec
 
 Vale ter essa lista à mão, porque é onde a implementação tomou decisões próprias:
@@ -718,8 +887,8 @@ Vale ter essa lista à mão, porque é onde a implementação tomou decisões pr
 | Item | Por quê |
 |---|---|
 | `lib/env.ts` | falha de env com mensagem útil, sem quebrar o build |
-| `lib/db/types.ts` | contrato de persistência separado da implementação |
-| `server-only` em 5 arquivos | erro de build em vez de vazamento de chave |
+| Portas em `types/` | contrato separado da implementação; troca de provedor sem atrito |
+| `server-only` em 11 arquivos | erro de build em vez de vazamento de chave |
 | Sessão por HMAC + `timingSafeEqual` | segredo não vai ao navegador; comparação em tempo constante |
 | Cliente Supabase preguiçoso | build não precisa dos segredos |
 | Seed idempotente | rodar de novo não duplica |
@@ -735,6 +904,7 @@ Vale ter essa lista à mão, porque é onde a implementação tomou decisões pr
 | `wordmark.tsx` | marca com o motivo botânico |
 | `page-heading.tsx` | título e descrição das páginas, um só lugar |
 | `origin-summary.tsx` | melhoria opcional #1 do spec |
+| `demo-credentials.tsx` | quem avalia entra sem depender de receber a senha |
 | Bloco `prefers-reduced-motion` | acessibilidade de movimento |
 | `noUncheckedIndexedAccess` | rigor de tipo além do `strict` |
 
@@ -754,23 +924,25 @@ A página é Server Component e busca a lista. O client recebe como estado inici
 e só faz mutações. Não existe `useEffect` buscando dados em lugar nenhum.
 
 **2. Mutação devolve o registro; o client aplica localmente.**
-`POST /api/leads` devolve o lead criado. `POST /api/send-welcome` devolve o lead
-atualizado. Ninguém refaz `GET` depois de escrever. A tela responde na hora.
+`createLeadAction` devolve o lead criado. `sendWelcomeAction` devolve o lead
+atualizado. Ninguém relê a lista depois de escrever. A tela responde na hora.
 
 **3. Erro esperado é valor de retorno; erro inesperado é exceção.**
-`LeadsResult` e `SendResult` são uniões discriminadas com `ok: true | false`.
-Banco fora do ar e Resend recusando não são "excepcionais" — são cenários
-previstos, e viram estado de tela.
+`LeadsResult`, `LeadResult`, `SendResult` e `LoginResult` são uniões
+discriminadas com `ok: true | false`. Banco fora do ar e Resend recusando não são
+"excepcionais" — são cenários previstos, e viram estado de tela. Por isso os
+componentes fazem `if`, não `try/catch`.
 
-**4. Uma barreira de build entre servidor e navegador.**
-`import 'server-only'` em `auth.ts`, `db/client.ts`, `db/leads.ts`,
-`load-leads.ts` e `send-welcome-email.ts`. Importar qualquer um desses em um
-componente client não é bug de produção — é erro de compilação.
+**4. Duas barreiras entre servidor e navegador.**
+`import 'server-only'` em 11 arquivos torna erro de compilação importar servidor
+no client. E toda entrada pública (as actions) recebe `unknown` e só confia no
+que sai do Zod. Uma barreira protege o segredo; a outra protege o dado.
 
 **5. Uma fonte de verdade por conceito.**
-Cores → `@theme`. Origens → `ORIGINS`. Validação → `validations.ts`. Estilo de
+Cores → `@theme`. Origens → `ORIGINS`. Validação → `lead-schema.ts`. Estilo de
 campo → `control.ts`. Filtro → `filter-leads.ts`. Persistência → `LeadRepository`.
-Cada conceito tem exatamente um arquivo onde mudá-lo.
+Escolha de provedor → `dependencies*.ts`. Cada conceito tem exatamente um arquivo
+onde mudá-lo.
 
 ---
 
@@ -780,13 +952,20 @@ Para não procurar depois:
 
 - **Nenhum teste.** Nem unitário, nem E2E. `filter-leads.ts` e `format.ts` são
   funções puras e seriam triviais de testar — é o ponto de entrada natural se
-  você quiser começar.
-- **Nenhum ADR.** As decisões estão em comentários no código e na seção
-  "Decisões técnicas" do README, não em `docs/adr/`.
+  você quiser começar. Com as portas declaradas, os casos de uso também ficaram
+  fáceis de testar com um repositório falso.
+- **Nenhum ADR.** As decisões estão em comentários no código, na seção
+  "Decisões técnicas" do README e aqui — não em `docs/adr/`.
 - **Documentação só em pt-BR.** README e spec não têm contraparte en-US.
 - **Sem paginação.** `getAll()` traz tudo. Coerente com o escopo, mas é o
   primeiro limite que a base vai encontrar.
 - **Sem editar nem excluir lead.** O CRUD é só C e R.
 - **Sem rate limit no login.** Não há limite de tentativas de senha.
+- **A sessão não expira do lado do servidor.** O valor do cookie é sempre o mesmo
+  HMAC; as 8 horas vêm do `maxAge`, que quem respeita é o navegador. Um cookie
+  copiado vale até o `SESSION_SECRET` mudar. A correção é assinar
+  `usuario|expiração` e validar no servidor.
+- **Sem email único em `leads`.** Dá para cadastrar o mesmo endereço duas vezes.
+  Um `create unique index` mais o tratamento do erro `23505` resolvem.
 - **`AGENTS.md` e `CLAUDE.md` foram apagados** e os SVGs padrão do Next também —
   limpeza do boilerplate.
