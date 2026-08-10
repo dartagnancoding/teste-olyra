@@ -2,5 +2,12 @@
   command = "npm run build"
   publish = ".next"
 
+[build.environment]
+  # Pinado porque o código usa `Array.prototype.toSorted` (a ordenação da
+  # lista), que só existe a partir do Node 20 — e ela roda também no SSR.
+  # Sem o pin, uma conta antiga do Netlify pode buildar em Node 18 e quebrar
+  # em produção sem quebrar localmente.
+  NODE_VERSION = "22"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
