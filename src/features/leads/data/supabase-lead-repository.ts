@@ -1,13 +1,12 @@
 import 'server-only'
 
-import type { PostgrestError } from '@supabase/supabase-js'
 import type { ZodType } from 'zod'
 
 import {
-  dataFailure,
-  type DataResult,
-  type DataFailureKind,
-} from '@/features/leads/types/data-result'
+  classifyPostgrestError as classify,
+  describePostgrestError as describe,
+} from '@/features/leads/data/postgrest-errors'
+import { dataFailure, type DataResult } from '@/features/leads/types/data-result'
 import type { Lead } from '@/features/leads/types/lead'
 import {
   LEAD_COLUMNS,
@@ -18,36 +17,6 @@ import type { LeadRepository } from '@/features/leads/types/lead-repository'
 import { getSupabase } from '@/lib/supabase/client'
 
 const TABLE = 'leads'
-
-/**
- * "O banco não é o que o contrato diz" chega por dois caminhos, verificados
- * contra o projeto real:
- *
- * - Postgres, classe 42: `42703` coluna inexistente, `42P01` tabela
- *   inexistente, `42804` tipo incompatível.
- * - PostgREST, que responde antes de tocar o Postgres quando o cache de schema
- *   já sabe que não existe: `PGRST205` (tabela), `PGRST204` (coluna).
- */
-const POSTGREST_SCHEMA_CODES = new Set(['PGRST204', 'PGRST205'])
-const UNIQUE_VIOLATION = '23505'
-
-function classify(error: PostgrestError): DataFailureKind {
-  const code = error.code ?? ''
-
-  if (code === UNIQUE_VIOLATION) return 'conflict'
-  if (code.startsWith('42') || POSTGREST_SCHEMA_CODES.has(code)) return 'schema-mismatch'
-
-  // Sem código costuma ser transporte: DNS, TLS, projeto pausado, chave inválida.
-  if (!code) return 'unreachable'
-
-  return 'unknown'
-}
-
-function describe(error: PostgrestError): string {
-  return [error.code, error.message, error.details, error.hint]
-    .filter(Boolean)
-    .join(' | ')
-}
 
 /**
  * Ponto único onde a resposta do Supabase deixa de ser `any`. Sem este parse,

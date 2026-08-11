@@ -12,7 +12,10 @@ import { ORIGINS } from '@/features/leads/types/lead'
  */
 export const leadSchema = z.object({
   name: z.string().trim().min(2, 'Informe o nome completo'),
-  email: z.email('Email inválido').trim().toLowerCase(),
+  // Normaliza **antes** de validar. Encadeado ao contrário (`z.email().trim()`)
+  // o Zod checa o formato na string crua, e um email colado com espaço no fim
+  // volta como "Email inválido" em vez de ser aparado. Foi assim que estava.
+  email: z.string().trim().toLowerCase().pipe(z.email('Email inválido')),
   origin: z.enum(ORIGINS, { message: 'Selecione uma origem' }),
 })
 
