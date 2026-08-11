@@ -25,8 +25,6 @@ Next.js 15 (App Router), TypeScript strict, Tailwind v4, Supabase, Resend, Motio
 
 ## Decisões
 
-**Next.js e não Astro.** Sessão, formulários, rotas protegidas e mutações. Astro é ótimo para conteúdo estático; aqui o custo de reintroduzir interatividade em ilhas não se pagaria.
-
 **Server Actions, sem rotas de API.** O único cliente do backend é o próprio front. Uma API REST aqui seria serializar JSON e escolher status codes para falar consigo mesmo. Isso removeu quatro rotas e o gateway HTTP inteiro. Como Server Action é endpoint público, a checagem de sessão e o parse com Zod continuam lá dentro.
 
 **Leitura no servidor, mutação no client.** `/crm` é Server Component e carrega a lista direto do repositório, sem `useEffect` de fetch. O client recebe como estado inicial e atualiza com o lead que a mutação devolve.
