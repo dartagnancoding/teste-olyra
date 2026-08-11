@@ -44,6 +44,17 @@ describe('classificação de erro', () => {
     expect(classifyPostgrestError(error({ code }))).toBe('unreachable')
   })
 
+  it.each([
+    ['PGRST301', 'token expirado'],
+    ['PGRST302', 'acesso anônimo negado'],
+    ['PGRST303', 'token emitido no futuro'],
+  ])('falha de autenticação (%s, %s) vira inalcançável', (code) => {
+    // Visto em desenvolvimento: o PGRST303 caía em "unknown" e a tela dizia
+    // "erro inesperado, tente novamente" — sem apontar para chave, URL ou
+    // relógio, que é onde a resposta está.
+    expect(classifyPostgrestError(error({ code }))).toBe('unreachable')
+  })
+
   it('código desconhecido não é chutado para outra categoria', () => {
     expect(classifyPostgrestError(error({ code: '22P02' }))).toBe('unknown')
   })

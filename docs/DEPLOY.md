@@ -152,7 +152,7 @@ correspondente no log do Netlify (**Deploys → Functions → logs**).
 
 | Código na tela | Causa provável | O que fazer |
 |---|---|---|
-| `DB_UNREACHABLE` | URL ou secret key erradas, ou projeto Supabase pausado | Conferir as duas variáveis e o status do projeto |
+| `DB_UNREACHABLE` | URL ou secret key erradas, projeto Supabase pausado, ou credencial recusada | Conferir as duas variáveis e o status do projeto |
 | `DB_SCHEMA_MISMATCH` | coluna renomeada ou faltando | Comparar a tabela com `supabase/schema.sql` |
 | `DB_CONFLICT` | email repetido | Esperado — o índice único está funcionando |
 | `MAIL_REJECTED` | limitação do Resend | Enviar para o email da conta (passo 6) |
