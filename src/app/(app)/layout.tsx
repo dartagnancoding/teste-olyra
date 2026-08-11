@@ -10,7 +10,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <>
       <Header />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10 sm:py-14">
+      {/* `px-4` no celular em vez de `px-6`: 16px a mais de conteúdo útil, que
+          a 360px é a diferença entre o email caber ou quebrar. */}
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-14">
         {children}
       </main>
       <Footer />

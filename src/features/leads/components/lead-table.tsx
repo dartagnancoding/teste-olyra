@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { LeadActions } from '@/features/leads/components/lead-actions'
 import { SendWelcomeButton } from '@/features/leads/components/send-welcome-button'
+import { WelcomeStatus } from '@/features/leads/components/welcome-status'
 import type { Lead } from '@/features/leads/types/lead'
 import { formatDate } from '@/lib/utils/format'
 
@@ -16,29 +17,14 @@ type LeadTableProps = {
   onLeadRemoved: (id: string) => void
 }
 
-/** Selo de boas-vindas, agora coluna própria — saiu de dentro do botão. */
-function WelcomeStatus({ sentAt }: { sentAt: string | null }) {
-  if (!sentAt) return <span className="text-sm text-text-muted">—</span>
-
-  return (
-    <Badge tone="success">
-      <svg
-        aria-hidden
-        viewBox="0 0 16 16"
-        className="size-3.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M3 8.5l3.5 3.5L13 5" />
-      </svg>
-      Enviado
-    </Badge>
-  )
-}
-
+/**
+ * Duas apresentações da mesma lista: tabela em telas largas, cartões
+ * empilhados no resto.
+ *
+ * A troca acontece em `lg` (1024px), e não em `md`, porque a tabela mede
+ * 976px de largura mínima — as seis colunas com email não cabem em 768px.
+ * Ligada em `md`, ela criava rolagem horizontal em qualquer tablet.
+ */
 export function LeadTable({
   leads,
   emptyTitle,
@@ -56,7 +42,7 @@ export function LeadTable({
 
   return (
     <Card>
-      <table className="hidden w-full border-collapse text-left md:table">
+      <table className="hidden w-full border-collapse text-left lg:table">
         <thead>
           <tr className="border-b border-border">
             <th scope="col" className="px-5 py-3 text-sm font-medium text-text-muted">
@@ -108,11 +94,11 @@ export function LeadTable({
         </tbody>
       </table>
 
-      <ul className="md:hidden">
+      <ul className="lg:hidden">
         {leads.map((lead) => (
           <li
             key={lead.id}
-            className="flex flex-col gap-3 border-b border-border p-5 last:border-0"
+            className="flex flex-col gap-3 border-b border-border p-4 last:border-0 sm:p-5"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex min-w-0 flex-col gap-1">
@@ -125,16 +111,27 @@ export function LeadTable({
                 onRemoved={onLeadRemoved}
               />
             </div>
-            <div className="flex flex-wrap items-center gap-3">
+            {/* Origem e data à esquerda, estado das boas-vindas encostado à
+                direita. Antes os três eram irmãos soltos: quando o selo
+                "Enviado" não cabia, ele caía para uma segunda linha e aquela
+                linha da lista ficava mais alta que as vizinhas.
+                O `flex-wrap` continua como rede de segurança para telas abaixo
+                de 360px — lá o selo desce em vez de escapar do card. */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <Badge>{lead.origin}</Badge>
               <span className="text-sm text-text-muted tabular-nums">
                 {formatDate(lead.created_at)}
               </span>
-              {lead.welcome_sent_at ? (
-                <WelcomeStatus sentAt={lead.welcome_sent_at} />
-              ) : (
-                <SendWelcomeButton lead={lead} onSent={onLeadUpdated} />
-              )}
+              {/* `h-8` fixo: o selo tem 28px de altura e o botão 32px, e sem
+                  isso a linha muda de altura conforme o lead já recebeu ou não
+                  as boas-vindas. */}
+              <span className="ml-auto flex h-8 shrink-0 items-center">
+                {lead.welcome_sent_at ? (
+                  <WelcomeStatus sentAt={lead.welcome_sent_at} />
+                ) : (
+                  <SendWelcomeButton lead={lead} onSent={onLeadUpdated} />
+                )}
+              </span>
             </div>
           </li>
         ))}

@@ -40,13 +40,14 @@ export function CrmView({ initialLeads }: CrmViewProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <SearchBar filters={filters} onChange={setFilters} className="flex-1" />
-        <div className="flex items-center gap-3">
-          <ToggleView value={viewType} onChange={setViewType} />
-          <NewLeadButton onCreated={handleCreated} />
-        </div>
-      </div>
+      {/* O toggle e o botão vão como slots: quem decide o arranjo dos cinco
+          controles é a barra, porque esse arranjo muda com a largura da tela. */}
+      <SearchBar
+        filters={filters}
+        onChange={setFilters}
+        viewToggle={<ToggleView value={viewType} onChange={setViewType} />}
+        action={<NewLeadButton onCreated={handleCreated} />}
+      />
 
       {/* O modal fecha ao cadastrar, então a confirmação precisa viver aqui,
           fora dele — senão o operador não vê que deu certo. */}

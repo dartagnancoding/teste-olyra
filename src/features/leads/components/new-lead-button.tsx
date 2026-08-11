@@ -6,16 +6,18 @@ import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { LeadForm } from '@/features/leads/components/lead-form'
 import type { Lead } from '@/features/leads/types/lead'
+import { cn } from '@/lib/utils/cn'
 
 type NewLeadButtonProps = {
   onCreated: (lead: Lead) => void
+  className?: string
 }
 
 /**
  * Dono do estado de abertura do modal. Fica ao lado da busca para que o
  * cadastro seja uma ação da lista, e não uma coluna competindo com ela.
  */
-export function NewLeadButton({ onCreated }: NewLeadButtonProps) {
+export function NewLeadButton({ onCreated, className }: NewLeadButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
 
   const close = useCallback(() => setIsOpen(false), [])
@@ -27,7 +29,7 @@ export function NewLeadButton({ onCreated }: NewLeadButtonProps) {
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} className="sm:w-auto">
+      <Button onClick={() => setIsOpen(true)} className={cn('shrink-0', className)}>
         <svg
           aria-hidden
           viewBox="0 0 16 16"
