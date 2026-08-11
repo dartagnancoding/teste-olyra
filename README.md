@@ -19,9 +19,18 @@ O banco já está criado e populado no Supabase — o `.env.local` aponta para e
 
 Para publicar na Netlify, o `netlify.toml` já declara o build, o plugin do Next e o Node 22 — basta conectar o repositório e cadastrar as variáveis do `.env.example`.
 
-## Stack
+## Stack, e por quê
 
-Next.js 15 (App Router), TypeScript strict, Tailwind v4, Supabase, Resend, Motion. Deploy na Netlify.
+| Escolha | Alternativa óbvia | Por quê |
+|---|---|---|
+| **Next.js 15** | Vite + React SPA | A SPA precisaria de um backend separado só para guardar a chave do Supabase e mandar o email — segredo não pode ir para o navegador. Com Next é um projeto só: o servidor lê o banco e o client recebe HTML pronto, sem tela piscando enquanto o `useEffect` busca. |
+| **TypeScript strict** | JavaScript | O ganho aqui é concreto: o retorno do banco é `any`, e é o tipo que obriga a validar antes de confiar. Com `noUncheckedIndexedAccess`, um acesso a índice já vem como possivelmente `undefined`. |
+| **Supabase** | Postgres próprio, Neon, PlanetScale | Honestamente: é Postgres gerenciado, gratuito e sobe em dois minutos — para o escopo do desafio, provisionar infra seria tempo gasto no lugar errado. O que compensa é o código não depender disso: a application fala com a porta `LeadRepository`, e trocar o banco é escrever outra implementação em `data/`. |
+| **Tailwind v4** | CSS Modules, styled-components | Com `@theme`, toda cor é token semântico (`bg-surface`, não `bg-white`). Trocar a identidade é editar um bloco, não caçar hex em 40 arquivos. |
+| **React Hook Form + Zod** | `useState` por campo | O mesmo schema valida no navegador e revalida na Server Action. Sem isso seriam duas validações para manter em sincronia — e a do servidor é a que importa, porque a action é endpoint público. |
+| **Resend** | Nodemailer + SMTP | SMTP exigiria credencial de servidor de email e lidar com entrega. A Resend é uma chamada HTTP. Também está atrás de uma porta (`WelcomeMailer`), então trocar por SES é um arquivo. |
+| **Vitest** | Jest | Lê o mesmo `tsconfig` e os mesmos aliases sem configuração extra. |
+| **Motion** | CSS puro | Só onde CSS não alcança: animar item que **sai** de uma lista exige saber que ele vai sair, e `AnimatePresence` resolve isso. O modal, que não tem esse problema, é CSS puro. |
 
 ## Decisões
 
@@ -53,13 +62,17 @@ Recusas que não são essa (excesso de envio, credencial inválida) continuam se
 
 ## Estrutura
 
-Organização por feature, cada uma em quatro camadas:
+Organizado **por feature**, não por tipo de arquivo. A alternativa comum — `components/`, `services/`, `hooks/` na raiz — parece arrumada em projeto pequeno e espalha uma mudança por cinco pastas assim que cresce. Aqui, mexer em leads é mexer em `features/leads/`.
+
+Cada feature tem quatro camadas, com as dependências apontando para dentro:
 
 ```
 components → application → types (portas) ← data
 ```
 
-Componentes chamam casos de uso; casos de uso dependem só de contratos declarados em `types`; `data` implementa esses contratos. Nenhum componente importa `data` nem o cliente do banco — o pacote `server-only` transforma essa tentativa em erro de build.
+Componentes chamam casos de uso; casos de uso dependem só de contratos declarados em `types`; `data` implementa esses contratos. A seta invertida em `data` é o ponto: quem decide o formato é quem precisa dele, não o banco.
+
+Nenhum componente importa `data` nem o cliente do banco — o pacote `server-only` transforma essa tentativa em erro de build, então o vazamento de chave não depende de alguém lembrar da regra.
 
 ```
 src/features/leads/     components, hooks, application, data, types
