@@ -17,7 +17,7 @@ Abre em http://localhost:3000. As credenciais do painel estão no `.env.local` (
 
 O banco já está criado e populado no Supabase — o `.env.local` aponta para ele. Se quiser subir um do zero, rode `supabase/schema.sql` e `supabase/seed.sql` no SQL Editor de um projeto novo e troque as variáveis.
 
-Deploy no Netlify, passo a passo: [`docs/DEPLOY.md`](docs/DEPLOY.md).
+Para publicar na Netlify, o `netlify.toml` já declara o build, o plugin do Next e o Node 22 — basta conectar o repositório e cadastrar as variáveis do `.env.example`.
 
 ## Stack
 
