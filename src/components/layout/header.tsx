@@ -4,10 +4,7 @@ import { Wordmark } from '@/components/brand/wordmark'
 import { LogoutButton } from '@/components/layout/logout-button'
 
 type HeaderProps = {
-  /**
-   * Ações de feature exibidas antes do botão de sair. Entram por slot para o
-   * header seguir sendo chassi da aplicação, sem importar nada de `features`.
-   */
+  /** Slot: mantém o header como chassi, sem importar nada de `features`. */
   actions?: React.ReactNode
 }
 

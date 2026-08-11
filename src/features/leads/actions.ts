@@ -8,12 +8,8 @@ import { leadSchema, sendWelcomeSchema } from '@/features/leads/types/lead-schem
 import type { LeadResult, VoidResult } from '@/features/leads/types/results'
 
 /**
- * Adaptador de entrada da feature — ocupa o lugar que os route handlers
- * ocupavam. Autentica, valida e delega; nenhuma regra vive aqui.
- *
- * Server Action é endpoint público: qualquer um pode invocá-la sem passar pela
- * UI. Por isso a checagem de sessão e o parse com Zod continuam obrigatórios,
- * exatamente como eram na rota.
+ * Server Action é endpoint público: dá para invocar sem passar pela UI. Por
+ * isso a checagem de sessão e o parse com Zod são obrigatórios aqui.
  */
 export async function createLeadAction(input: unknown): Promise<LeadResult> {
   if (!(await isAuthenticated())) {

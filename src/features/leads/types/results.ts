@@ -1,16 +1,11 @@
 import type { Lead } from '@/features/leads/types/lead'
 
 /**
- * Resultados dos casos de uso. Vivem em `types` porque atravessam a fronteira
- * servidor→client: a action devolve, o componente consome. Como são tipos puros
- * (apagados na compilação), o client nunca arrasta o módulo de servidor junto.
- *
  * Falha esperada é valor de retorno, não exceção — o componente faz `if`, não
  * `try/catch`.
  *
- * `code` é estável e curto de propósito: aparece discretamente na UI e no log
- * do servidor, então o operador consegue dizer "deu DB_SCHEMA_MISMATCH" e quem
- * for investigar acha a linha correspondente sem adivinhar.
+ * O `code` aparece na UI e no log: o operador diz "deu DB_SCHEMA_MISMATCH" e
+ * quem investiga acha a linha sem adivinhar.
  */
 export type FailureCode =
   | 'DB_UNREACHABLE'
@@ -24,7 +19,7 @@ export type FailureCode =
 
 export type Failure = {
   ok: false
-  /** Texto pronto para a tela, em português e sem jargão. */
+  /** Pronto para a tela: português, sem jargão. */
   message: string
   code: FailureCode
 }

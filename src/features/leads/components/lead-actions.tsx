@@ -15,11 +15,6 @@ type LeadActionsProps = {
   onRemoved: (id: string) => void
 }
 
-/**
- * Todas as ações de um lead em um só menu. Antes existia apenas um botão de
- * "Enviar boas-vindas" ocupando uma coluna inteira — o menu deixa a tabela
- * respirar e abre espaço para ações novas sem redesenhar a linha.
- */
 export function LeadActions({ lead, onUpdated, onRemoved }: LeadActionsProps) {
   const [busy, setBusy] = useState<'deleting' | null>(null)
   const [error, setError] = useState<string | null>(null)

@@ -8,7 +8,6 @@ type ModalProps = {
   open: boolean
   onClose: () => void
   title: string
-  /** `wide` para conteúdo que precisa de largura, como a prévia do email. */
   size?: 'default' | 'wide'
   children: React.ReactNode
 }
@@ -18,28 +17,20 @@ const WIDTHS = {
   wide: 'w-[min(44rem,calc(100vw-2rem))]',
 } as const
 
-/**
- * Espera da animação de saída antes de desmontar o conteúdo. Precisa ser maior
- * que a transição declarada em `globals.css` (200ms).
- */
+/** Precisa ser maior que a transição de `.modal-dialog` em `globals.css`. */
 const EXIT_MS = 260
 
 /**
- * Modal sobre o `<dialog>` nativo, em vez de uma `<div>` com `position: fixed`.
+ * `<dialog>` nativo: foco preso, Escape, resto da página inerte e top layer,
+ * tudo sem biblioteca.
  *
- * O elemento nativo já resolve, sem biblioteca e sem código nosso: prende o
- * foco dentro do diálogo, fecha no Escape, torna o resto da página inerte para
- * leitor de tela e renderiza na top layer (nenhum `z-index` compete).
+ * A animação é CSS puro (`.modal-dialog`), apoiada em `@starting-style` e
+ * `transition-behavior: allow-discrete` — sem isso não há como animar a saída
+ * de um elemento indo para `display: none`.
  *
- * A animação de entrada e de saída é CSS puro (`.modal-dialog`, em
- * `globals.css`), apoiada em `@starting-style` e em
- * `transition-behavior: allow-discrete` — é o que permite animar a saída de um
- * elemento que vai para `display: none` e deixa a top layer. Sem isso o
- * diálogo desapareceria de um quadro para o outro.
- *
- * O conteúdo só fica montado enquanto o modal está aberto — assim o formulário
- * volta limpo a cada abertura, sem ninguém chamar `reset()`. A desmontagem
- * espera a saída terminar; feita na hora, o modal sairia da tela já vazio.
+ * O conteúdo desmonta ao fechar, o que devolve o formulário limpo sem ninguém
+ * chamar `reset()`. A desmontagem espera a saída; imediata, o modal sairia da
+ * tela já vazio.
  */
 export function Modal({ open, onClose, title, size = 'default', children }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null)

@@ -10,9 +10,8 @@ const COOKIE_NAME = 'olyra_session'
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8
 
 /**
- * O valor do cookie é um HMAC do usuário, não o segredo em si. Assim o
- * SESSION_SECRET nunca trafega para o navegador e continua sendo impossível
- * forjar uma sessão sem conhecê-lo.
+ * O cookie carrega um HMAC do usuário, não o segredo: `SESSION_SECRET` nunca
+ * vai para o navegador, e sem ele não dá para forjar sessão.
  */
 function sign(user: string): string {
   return createHmac('sha256', requireEnv('SESSION_SECRET')).update(user).digest('hex')

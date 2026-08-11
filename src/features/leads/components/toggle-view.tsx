@@ -34,9 +34,8 @@ const OPTIONS: Array<{ value: ViewType; label: string; icon: React.ReactNode }> 
 ]
 
 /**
- * Alterna lista e cards na mesma tela. `aria-pressed` em vez de duas rotas: a
- * visualização é preferência de exibição do mesmo dado, não outro lugar da
- * aplicação — por isso também saiu da navegação do header.
+ * `aria-pressed` e não duas rotas: é preferência de exibição do mesmo dado,
+ * não outro lugar da aplicação.
  */
 export function ToggleView({ value, onChange }: ToggleViewProps) {
   return (

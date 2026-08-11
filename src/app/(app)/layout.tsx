@@ -1,22 +1,25 @@
-import { redirect } from 'next/navigation'
+import { redirect } from "next/navigation";
 
-import { Footer } from '@/components/layout/footer'
-import { Header } from '@/components/layout/header'
-import { isAuthenticated } from '@/features/auth/application/session'
+import { Footer } from "@/components/layout/footer";
+import { Header } from "@/components/layout/header";
+import { isAuthenticated } from "@/features/auth/application/session";
 import {
   isMailRedirected,
   PREVIEW_NAME,
   previewWelcomeEmail,
-} from '@/features/leads/application/preview-welcome-email'
-import { WelcomeEmailPreview } from '@/features/leads/components/welcome-email-preview'
+} from "@/features/leads/application/preview-welcome-email";
+import { WelcomeEmailPreview } from "@/features/leads/components/welcome-email-preview";
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  if (!(await isAuthenticated())) redirect('/login')
+export default async function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  if (!(await isAuthenticated())) redirect("/login");
 
-  // Montado no servidor: o HTML do email nasce em `data` e chega ao componente
-  // client como texto, então nem o template nem a chave do Resend entram no
-  // bundle do navegador.
-  const email = previewWelcomeEmail()
+  // Montado no servidor: o HTML chega ao client como texto, então nem o
+  // template nem a chave do Resend entram no bundle do navegador.
+  const email = previewWelcomeEmail();
 
   return (
     <>
@@ -30,12 +33,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           />
         }
       />
-      {/* `px-4` no celular em vez de `px-6`: 16px a mais de conteúdo útil, que
-          a 360px é a diferença entre o email caber ou quebrar. */}
+
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-14">
         {children}
       </main>
       <Footer />
     </>
-  )
+  );
 }

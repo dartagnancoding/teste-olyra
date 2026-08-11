@@ -5,12 +5,8 @@ import type { CredentialsChecker } from '@/features/auth/types/auth'
 import { requireEnv } from '@/lib/env'
 
 /**
- * Credencial única vinda do ambiente — é o que o desafio pede. Trocar por uma
- * tabela `users` com senha hasheada é escrever outro arquivo nesta pasta e
- * apontar `features/auth/dependencies.ts` para ele.
- *
- * A comparação passa por `timingSafeEqual` para não vazar informação pelo
- * tempo que a checagem leva para falhar.
+ * `timingSafeEqual` para a checagem não vazar informação pelo tempo que leva
+ * para falhar.
  */
 export const envCredentialsChecker: CredentialsChecker = {
   matches(user, password) {

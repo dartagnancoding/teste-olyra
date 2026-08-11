@@ -39,8 +39,7 @@ export function LeadForm({ onCreated, onCancel }: LeadFormProps) {
 
     const result = await createLeadAction(values)
 
-    // Em caso de erro o modal fica aberto de propósito: o que foi digitado
-    // continua na tela e dá para corrigir sem redigitar.
+    // Modal fica aberto no erro: dá para corrigir sem redigitar.
     if (!result.ok) {
       setFailure(result)
       return

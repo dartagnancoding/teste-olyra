@@ -25,11 +25,8 @@ const MESSAGES: Record<DataFailure['kind'], { code: FailureCode; message: string
 }
 
 /**
- * Único lugar que traduz falha técnica em mensagem de tela.
- *
- * O `detail` — mensagem crua do Postgres, com código e hint — vai só para o log
- * do servidor. Ele pode conter nome de coluna, constraint e estrutura interna,
- * que não têm por que chegar ao navegador.
+ * O `detail` cru do Postgres vai só para o log: ele carrega nome de coluna,
+ * constraint e estrutura interna, que não têm por que chegar ao navegador.
  */
 export function describeFailure(failure: DataFailure, context: string): Failure {
   const { code, message } = MESSAGES[failure.kind]

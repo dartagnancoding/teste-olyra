@@ -1,17 +1,12 @@
 import { z } from 'zod'
 
 /**
- * Contrato de **leitura** do banco — o formato que uma linha de `leads` precisa
- * ter para o resto do sistema poder confiar nela.
+ * `select()` do Supabase devolve `any`: sem este parse, um `data as Lead[]`
+ * afirma um formato que ninguém conferiu, e uma coluna renomeada vira
+ * `undefined` silencioso na tela em vez de erro.
  *
- * Existe porque `select()` do Supabase devolve `any`: sem isto, um
- * `data as Lead[]` afirma um formato que ninguém conferiu, e uma coluna
- * renomeada vira `undefined` silencioso na interface em vez de erro.
- *
- * `origin` é `string` solto de propósito. Na escrita exigimos uma origem da
- * lista (`leadSchema`); na leitura aceitamos qualquer valor, porque o banco
- * pode guardar uma origem antiga que saiu da lista — e isso não pode derrubar
- * a tela.
+ * `origin` fica `string` solto: na escrita exigimos uma da lista, mas o banco
+ * pode guardar uma origem antiga que saiu dela, e isso não pode derrubar a tela.
  */
 export const leadRowSchema = z.object({
   id: z.uuid(),

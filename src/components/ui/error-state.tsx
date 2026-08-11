@@ -3,10 +3,7 @@ import { Card } from '@/components/ui/card'
 type ErrorStateProps = {
   title: string
   description: string
-  /**
-   * Código estável da falha. Aparece discreto para o operador conseguir
-   * relatar o que viu e para casar com a linha correspondente no log.
-   */
+  /** Aparece discreto, para o operador relatar e casar com o log. */
   code?: string
 }
 

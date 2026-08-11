@@ -5,13 +5,9 @@ type WelcomeStatusProps = {
 }
 
 /**
- * Estado das boas-vindas, compartilhado pela lista e pelos cards.
- *
- * Existe como componente próprio porque as duas visões diziam a mesma coisa
- * com palavras diferentes — "Enviado" na lista, "Boas-vindas enviadas" no
- * card. Além da inconsistência de vocabulário, o texto longo não cabia no
- * rodapé do card a 360px e quebrava linha, deixando os cards com alturas
- * diferentes conforme o lead já tinha recebido o email.
+ * Compartilhado porque as duas visões diziam a mesma coisa com palavras
+ * diferentes, e o texto longo do card quebrava linha a 360px — deixando os
+ * cards com alturas diferentes conforme o lead já tinha recebido o email.
  */
 export function WelcomeStatus({ sentAt }: WelcomeStatusProps) {
   if (!sentAt) return <span className="text-sm text-text-muted">—</span>

@@ -9,21 +9,14 @@ export type LoginInput = z.infer<typeof loginSchema>
 
 export type LoginResult = { ok: true } | { ok: false; message: string }
 
-/**
- * Porta de verificação de credencial. Hoje a implementação lê variáveis de
- * ambiente; trocar por uma tabela de usuários com hash é escrever outra
- * implementação em `data`, sem tocar na application nem nos componentes.
- */
+/** Trocar env por tabela de usuários com hash não sai de `data`. */
 export type CredentialsChecker = {
   matches(user: string, password: string): boolean
-  /** Usuário canônico do painel — é ele que a sessão assina. */
+  /** É este valor que a sessão assina. */
   currentUser(): string
 }
 
-/**
- * Porta de sessão. A implementação atual é um cookie assinado; trocar por
- * sessão em banco ou Redis não sai desta pasta.
- */
+/** Cookie assinado hoje; banco ou Redis não sairia de `data`. */
 export type SessionStore = {
   create(user: string): Promise<void>
   destroy(): Promise<void>

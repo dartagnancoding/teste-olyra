@@ -1,18 +1,18 @@
-import type { Metadata } from 'next'
-import { redirect } from 'next/navigation'
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { DemoCredentials } from '@/features/auth/components/demo-credentials'
-import { LoginForm } from '@/features/auth/components/login-form'
-import { Wordmark } from '@/components/brand/wordmark'
-import { Card } from '@/components/ui/card'
-import { isAuthenticated } from '@/features/auth/application/session'
+import { DemoCredentials } from "@/features/auth/components/demo-credentials";
+import { LoginForm } from "@/features/auth/components/login-form";
+import { Wordmark } from "@/components/brand/wordmark";
+import { Card } from "@/components/ui/card";
+import { isAuthenticated } from "@/features/auth/application/session";
 
 export const metadata: Metadata = {
-  title: 'Entrar — Olyra',
-}
+  title: "Entrar — Olyra",
+};
 
 export default async function LoginPage() {
-  if (await isAuthenticated()) redirect('/crm')
+  if (await isAuthenticated()) redirect("/crm");
 
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6 sm:py-16">
@@ -33,5 +33,5 @@ export default async function LoginPage() {
         </p>
       </div>
     </main>
-  )
+  );
 }

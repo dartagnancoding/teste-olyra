@@ -17,35 +17,15 @@ type SearchBarProps = {
   filters: LeadFilters
   onChange: (filters: LeadFilters) => void
   className?: string
-  /** Alternador de visualização, encaixado ao lado do filtro de origem. */
   viewToggle?: React.ReactNode
-  /** Ação principal da tela, encaixada ao lado da ordenação. */
   action?: React.ReactNode
 }
 
 /**
- * Barra de controles da lista. Recebe o toggle e a ação principal como slots
- * porque o arranjo dos cinco controles é uma decisão só, e ela muda com a
- * largura.
- *
- * A 360px os três controles empilhados custavam 212px de altura antes do
- * primeiro lead. Emparelhá-los dois a dois resolveria — mas os dois selects
- * não cabem lado a lado: "Todas as origens" pede 130px de texto e sobrariam
- * 107. Então cada select divide a linha com um controle estreito (o toggle, o
- * botão), e ambos ficam folgados:
- *
- *     [ Buscar por nome ou email        ]
- *     [ Todas as origens ▾ ] [ ≡ | ⊞ ]
- *     [ Mais recentes ▾ ]  [ + Novo lead ]
- *
- * A partir de `lg`, `contents` dissolve os agrupadores de linha: os cinco
- * voltam a ser itens diretos do flex, e `order` recompõe a sequência do
- * desktop (busca, origem, ordenação, toggle, ação).
- *
- * O corte é em `lg` (1024px), não em `sm`: a linha única precisa de ~890px
- * (224 + 192 do dois selects, 84 do toggle, 142 do botão, mais a busca e os
- * vãos). Ligada em `sm`, ela transbordava em qualquer largura de tablet — e é
- * o mesmo ponto em que a tabela entra no lugar dos cartões.
+ * No celular cada select divide a linha com um controle estreito, nunca com o
+ * outro select: os dois juntos pedem 341px e há 316. A partir de `lg`,
+ * `contents` dissolve os agrupadores e `order` recompõe a linha única — que
+ * precisa de ~890px, daí o corte ser em `lg` e não em `sm`.
  */
 export function SearchBar({
   filters,

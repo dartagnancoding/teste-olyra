@@ -1,14 +1,8 @@
 import { getDemoCredentials } from '@/features/auth/application/session'
 
 /**
- * Exibe as credenciais do painel na própria tela de login.
- *
- * É uma decisão consciente de escopo: este painel é uma demonstração de usuário
- * único e fixo, e quem avalia precisa entrar sem depender de receber a senha por
- * fora. Em uso real, remover este componente da página de login.
- *
- * Server Component — a senha é lida no servidor pela application e chega ao
- * navegador já como texto renderizado, nunca como variável exposta ao bundle.
+ * Escolha de escopo: painel de usuário único, e quem avalia precisa entrar sem
+ * receber a senha por fora. **Em uso real, remover da tela de login.**
  */
 export function DemoCredentials() {
   const credentials = getDemoCredentials()

@@ -13,10 +13,6 @@ type NewLeadButtonProps = {
   className?: string
 }
 
-/**
- * Dono do estado de abertura do modal. Fica ao lado da busca para que o
- * cadastro seja uma ação da lista, e não uma coluna competindo com ela.
- */
 export function NewLeadButton({ onCreated, className }: NewLeadButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
 

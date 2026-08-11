@@ -7,14 +7,11 @@ import { requireEnv } from '@/lib/env'
 let client: SupabaseClient | null = null
 
 /**
- * Cliente com a secret key do Supabase (`sb_secret_…`, sucessora da antiga
- * `service_role`): carrega `BYPASSRLS` e por isso só pode existir no servidor
- * (`server-only` transforma um import em componente client em erro de build).
- * O próprio Supabase recusa a chave com 401 quando a requisição vem de um
- * browser, o que fecha a mesma porta por um segundo caminho.
+ * A secret key carrega `BYPASSRLS`, então só pode existir no servidor:
+ * `server-only` transforma um import em componente client em erro de build, e
+ * o Supabase ainda recusa a chave com 401 se ela partir de um browser.
  *
- * A criação é preguiçosa para que o build do Next não exija os segredos —
- * eles só precisam existir quando uma requisição realmente chega.
+ * Criação preguiçosa para o build do Next não exigir os segredos.
  */
 export function getSupabase(): SupabaseClient {
   client ??= createClient(

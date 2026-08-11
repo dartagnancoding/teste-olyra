@@ -3,11 +3,7 @@ type PageHeadingProps = {
   description: string
 }
 
-/**
- * A 360px o cabeçalho competia com a lista: título grande, três linhas de
- * descrição e 40px de respiro empurravam o primeiro lead para fora da tela.
- * No celular ele encolhe; a partir de `sm` volta ao tamanho cheio.
- */
+/** A 360px o cabeçalho cheio empurrava o primeiro lead para fora da tela. */
 export function PageHeading({ title, description }: PageHeadingProps) {
   return (
     <div className="mb-6 flex flex-col gap-1.5 sm:mb-10 sm:gap-2">

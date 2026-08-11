@@ -1,15 +1,13 @@
 /**
- * Vocabulário de falha da camada de dados.
- *
- * O repositório **não lança**: devolve resultado. Assim o compilador obriga
- * quem chama a tratar o caso ruim, e a lista de coisas que podem dar errado
- * fica escrita no tipo em vez de descoberta em produção.
+ * O repositório não lança, devolve resultado: o compilador obriga quem chama a
+ * tratar o caso ruim, e o que pode dar errado fica escrito no tipo em vez de
+ * descoberto em produção.
  */
 
 export type DataFailureKind =
-  /** Banco/serviço inalcançável: rede, credencial inválida, projeto pausado. */
+  /** Rede, credencial inválida, projeto pausado. */
   | 'unreachable'
-  /** O banco respondeu, mas em formato diferente do contrato (coluna renomeada, tipo trocado). */
+  /** Respondeu fora do contrato: coluna renomeada, tipo trocado. */
   | 'schema-mismatch'
   /** Violação de restrição — hoje, email duplicado. */
   | 'conflict'
@@ -17,7 +15,7 @@ export type DataFailureKind =
 
 export type DataFailure = {
   kind: DataFailureKind
-  /** Mensagem técnica. Vai para o log do servidor, nunca para a tela. */
+  /** Log do servidor, nunca a tela. */
   detail: string
 }
 

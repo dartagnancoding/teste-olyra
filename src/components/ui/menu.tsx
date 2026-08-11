@@ -10,23 +10,15 @@ type MenuProps = {
 }
 
 /**
- * Menu de ações sobre a API `popover` nativa.
- *
- * A escolha resolve dois problemas de uma vez. O primeiro é recorte: a tabela
- * vive dentro de um card com `overflow-hidden`, e um dropdown posicionado por
- * `absolute` seria cortado — `popover` renderiza na top layer, fora do fluxo.
- * O segundo é dispensa: fechar ao clicar fora e no Escape vem do navegador,
- * sem listener global nosso.
- *
- * A posição é calculada na abertura porque o ancoramento nativo (CSS anchor)
- * ainda não é uniforme entre navegadores — e é na abertura que dá para medir o
- * menu, já que a top layer o renderiza antes do evento `toggle`.
+ * `popover` nativo, não `absolute`: a tabela vive num card com
+ * `overflow-hidden`, que recortaria o menu. A top layer escapa disso e ainda
+ * traz dispensa por clique-fora e Escape de graça. A posição é medida na
+ * abertura porque CSS anchor ainda não é uniforme entre navegadores.
  */
 
-/** Respiro entre o gatilho e o menu. */
 const GAP = 6
-/** Distância mínima da borda da janela. */
 const MARGIN = 8
+
 export function Menu({ label, children }: MenuProps) {
   const id = useId()
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -43,10 +35,9 @@ export function Menu({ label, children }: MenuProps) {
 
     if (!trigger || !menu) return
 
-    // Abaixo do gatilho é o padrão. Mas na última linha da tabela o menu
-    // passava da dobra e escondia "Excluir lead": o popover vive na top layer,
-    // então a página não ganha rolagem para alcançá-lo. Quando não cabe
-    // embaixo e sobra mais espaço em cima, ele vira para cima.
+    // Vira para cima quando não cabe embaixo: na última linha da tabela o menu
+    // passava da dobra e escondia "Excluir lead", e a top layer não ganha
+    // rolagem para alcançá-lo.
     const espacoAbaixo = window.innerHeight - trigger.bottom - MARGIN
     const espacoAcima = trigger.top - MARGIN
     const cabeAbaixo = espacoAbaixo >= menu.height + GAP

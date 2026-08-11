@@ -21,12 +21,8 @@ type LeadTableProps = {
 }
 
 /**
- * Duas apresentações da mesma lista: tabela em telas largas, cartões
- * empilhados no resto.
- *
- * A troca acontece em `lg` (1024px), e não em `md`, porque a tabela mede
- * 976px de largura mínima — as seis colunas com email não cabem em 768px.
- * Ligada em `md`, ela criava rolagem horizontal em qualquer tablet.
+ * A troca é em `lg` e não em `md` porque a tabela mede 976px de largura
+ * mínima: em 768px ela criava rolagem horizontal em qualquer tablet.
  */
 export function LeadTable({
   leads,
@@ -70,10 +66,8 @@ export function LeadTable({
             </th>
           </tr>
         </thead>
-        {/* A tabela não usa `mode="popLayout"` nem `layout`: os dois dependem
-            de tirar o elemento do fluxo com `position: absolute`, o que
-            destrói a distribuição de colunas de uma `<tr>`. Aqui a linha
-            apenas some, e as de baixo sobem sem transição. */}
+        {/* Sem `popLayout` nem `layout`: os dois tiram o elemento do fluxo
+            com `position: absolute`, o que destrói as colunas de uma `<tr>`. */}
         <tbody>
           <AnimatePresence>
             {leads.map((lead, index) => (
@@ -129,20 +123,13 @@ export function LeadTable({
                   onRemoved={onLeadRemoved}
                 />
               </div>
-              {/* Origem e data à esquerda, estado das boas-vindas encostado à
-                  direita. Antes os três eram irmãos soltos: quando o selo
-                  "Enviado" não cabia, ele caía para uma segunda linha e aquela
-                  linha da lista ficava mais alta que as vizinhas.
-                  O `flex-wrap` continua como rede de segurança para telas
-                  abaixo de 360px — lá o selo desce em vez de escapar do card. */}
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <Badge>{lead.origin}</Badge>
                 <span className="text-sm text-text-muted tabular-nums">
                   {formatDate(lead.created_at)}
                 </span>
-                {/* `h-8` fixo: o selo tem 28px de altura e o botão 32px, e sem
-                    isso a linha muda de altura conforme o lead já recebeu ou
-                    não as boas-vindas. */}
+                {/* `h-8` fixo: o selo tem 28px e o botão 32px, e sem isso a
+                    linha muda de altura conforme o lead já recebeu ou não. */}
                 <span className="ml-auto flex h-8 shrink-0 items-center">
                   {lead.welcome_sent_at ? (
                     <WelcomeStatus sentAt={lead.welcome_sent_at} />

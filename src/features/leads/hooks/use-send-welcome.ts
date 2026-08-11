@@ -5,11 +5,7 @@ import { useState } from 'react'
 import { sendWelcomeAction } from '@/features/leads/actions'
 import type { Lead } from '@/features/leads/types/lead'
 
-/**
- * Envio de boas-vindas isolado do componente porque agora existem dois gatilhos
- * para a mesma ação: o botão rápido na coluna de status e o item do menu. A
- * regra de "já enviado não reenvia" mora aqui, num lugar só.
- */
+/** Dois gatilhos para a mesma ação: o botão rápido e o item do menu. */
 export function useSendWelcome(lead: Lead, onUpdated: (lead: Lead) => void) {
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState<string | null>(null)

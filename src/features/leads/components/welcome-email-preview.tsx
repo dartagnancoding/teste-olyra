@@ -8,18 +8,13 @@ type WelcomeEmailPreviewProps = {
   subject: string
   html: string
   previewName: string
-  /** Envios desviados para a caixa do administrador (conta em modo de teste). */
   isRedirected: boolean
 }
 
 /**
- * Mostra o email de boas-vindas exatamente como o lead recebe.
- *
- * O HTML vai para um `<iframe sandbox>` em vez de ser injetado na página. São
- * dois motivos: email é escrito com tabelas e estilo inline dos anos 2000, e
- * solto no documento ele herdaria a tipografia e os resets do painel — a
- * prévia mostraria algo que não existe. O `sandbox` vazio ainda bloqueia
- * script, formulário e navegação, então nada dentro do email alcança o painel.
+ * `<iframe sandbox>` e não injeção na página: solto no documento, o HTML de
+ * email herdaria os resets do painel e a prévia mostraria algo que não existe.
+ * O `sandbox` vazio ainda bloqueia script, formulário e navegação.
  */
 export function WelcomeEmailPreview({
   subject,

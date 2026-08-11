@@ -4,16 +4,11 @@ import { describeFailure } from '@/features/leads/application/describe-failure'
 import { leadRepository, welcomeMailer } from '@/features/leads/dependencies.server'
 import type { LeadResult } from '@/features/leads/types/results'
 
-/**
- * Orquestra repositório e mailer. Nenhum dos dois é conhecido concretamente
- * aqui — só os contratos —, então esta regra sobrevive à troca de Supabase e
- * de Resend sem uma linha alterada.
- */
+/** Só conhece os contratos: sobrevive à troca de Supabase e de Resend. */
 export async function sendWelcome(leadId: string): Promise<LeadResult> {
   const found = await leadRepository.getById(leadId)
 
-  // Banco fora do ar não pode ser confundido com "lead não existe": são
-  // problemas diferentes, e o operador age diferente em cada um.
+  // Banco fora do ar não é "lead não existe": o operador age diferente.
   if (!found.ok) return describeFailure(found.failure, 'leads.getById')
 
   const lead = found.data
@@ -40,9 +35,9 @@ export async function sendWelcome(leadId: string): Promise<LeadResult> {
   const marked = await leadRepository.markWelcomeSent(lead.id, new Date())
 
   if (!marked.ok) {
-    // O email já saiu; devolver sucesso com o lead marcado em memória evita que
-    // o operador reenvie por achar que falhou. Estado desatualizado até um
-    // refresh é preferível a email duplicado para o cliente.
+    // O email já saiu. Devolver sucesso com o lead marcado em memória evita
+    // reenvio: estado desatualizado até um refresh é melhor que email
+    // duplicado para o cliente.
     console.error(
       `[leads.markWelcomeSent] email enviado, mas o status não persistiu: ${marked.failure.detail}`,
     )

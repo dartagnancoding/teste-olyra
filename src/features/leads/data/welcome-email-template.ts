@@ -1,8 +1,7 @@
 /**
- * HTML de email é escrito com tabelas e estilo inline de propósito: clientes
- * como Outlook e Gmail ignoram folhas de estilo e boa parte do CSS moderno.
- * Os valores hex repetem os tokens da paleta Olyra porque `var()` não é
- * suportado em email.
+ * Tabelas e estilo inline porque Outlook e Gmail ignoram folha de estilo e boa
+ * parte do CSS moderno. Os hex repetem os tokens da paleta porque `var()` não
+ * funciona em email.
  */
 
 import type { RedirectNotice } from '@/features/leads/types/welcome-mailer'
@@ -53,11 +52,8 @@ export function welcomeText(name: string, notice?: RedirectNotice): string {
 }
 
 /**
- * Tarja de envio demonstrativo.
- *
- * Fica **fora** do cartão branco, em cinza e corpo menor: precisa ser lida
- * como carimbo de entrega, não como parte da mensagem da Olyra. Quem
- * encaminhar este email mostra, na própria peça, para quem ela iria.
+ * Fora do cartão branco e em corpo menor: tem que ser lida como carimbo de
+ * entrega, não como parte da mensagem da Olyra.
  */
 function redirectBanner(notice: RedirectNotice): string {
   const safeName = escapeHtml(notice.name)

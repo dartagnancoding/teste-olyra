@@ -1,9 +1,7 @@
 /**
- * Leitura de variáveis de ambiente com falha explícita.
- *
- * O acesso é feito sob demanda (e não em um objeto congelado no import) porque
- * o build do Next avalia módulos sem necessariamente ter o ambiente completo;
- * quebrar só no momento do uso dá uma mensagem melhor que um build vermelho.
+ * Lido sob demanda, não num objeto congelado no import: o build do Next avalia
+ * módulos sem ter o ambiente completo, e quebrar no uso dá mensagem melhor que
+ * um build vermelho.
  */
 export function requireEnv(name: string): string {
   const value = process.env[name]
@@ -17,13 +15,7 @@ export function requireEnv(name: string): string {
   return value
 }
 
-/**
- * Variável cuja ausência é uma configuração válida, e não um erro.
- *
- * Devolve `null` em vez de string vazia para que o chamador seja obrigado a
- * decidir o que fazer — `''` passaria despercebido num `if` e viraria bug
- * silencioso.
- */
+/** Ausência é configuração válida. `null` e não `''`, que passaria num `if`. */
 export function optionalEnv(name: string): string | null {
   const value = process.env[name]?.trim()
 

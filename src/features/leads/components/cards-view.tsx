@@ -17,12 +17,8 @@ type CardsViewProps = {
 }
 
 /**
- * Apresentação pura: recebe a lista já filtrada e ordenada.
- *
- * Antes este componente tinha `useLeadList` próprio, o que criava um segundo
- * estado paralelo — busca e filtro da lista não valiam aqui, e um lead
- * cadastrado numa visão não aparecia na outra. Agora as duas visões leem do
- * mesmo hook, em `CrmView`.
+ * Recebe a lista já filtrada. Com `useLeadList` próprio, como era antes, um
+ * lead cadastrado numa visão não aparecia na outra.
  */
 export function CardsView({
   leads,
@@ -43,9 +39,8 @@ export function CardsView({
 
   return (
     <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {/* `popLayout` tira o card que sai do fluxo antes de animar: sem isso a
-          grade só se reorganizaria depois do fim da saída, e os vizinhos
-          dariam um salto seco para preencher o buraco. */}
+      {/* `popLayout` tira o card do fluxo antes de animar: sem isso os
+          vizinhos dariam um salto seco para preencher o buraco. */}
       <AnimatePresence mode="popLayout">
         {leads.map((lead, index) => (
           <motion.li key={lead.id} layout {...leadMotion(index)}>

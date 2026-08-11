@@ -19,9 +19,8 @@ import { getSupabase } from '@/lib/supabase/client'
 const TABLE = 'leads'
 
 /**
- * Ponto único onde a resposta do Supabase deixa de ser `any`. Sem este parse,
- * um `as Lead[]` afirmaria um formato que ninguém conferiu — foi exatamente
- * assim que uma coluna renomeada virou badge vazio em vez de erro.
+ * Onde a resposta do Supabase deixa de ser `any`. Sem isto, uma coluna
+ * renomeada vira badge vazio em vez de erro — já aconteceu.
  */
 function parse<T>(schema: ZodType<T>, value: unknown, context: string): DataResult<T> {
   const parsed = schema.safeParse(value)
@@ -38,7 +37,7 @@ function parse<T>(schema: ZodType<T>, value: unknown, context: string): DataResu
   )
 }
 
-/** Uma falha inesperada de transporte (o `fetch` explodiu) também vira valor. */
+/** Falha de transporte (o `fetch` explodiu) também vira valor. */
 function fromThrown(error: unknown, context: string): DataResult<never> {
   return dataFailure(
     'unreachable',

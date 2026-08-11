@@ -9,10 +9,6 @@ type SendWelcomeButtonProps = {
   onSent: (lead: Lead) => void
 }
 
-/**
- * Atalho de uma ação só, ao lado do status. Fica desabilitado quando o email já
- * saiu — o menu de ações continua existindo para o resto.
- */
 export function SendWelcomeButton({ lead, onSent }: SendWelcomeButtonProps) {
   const { send, isSending, error, alreadySent } = useSendWelcome(lead, onSent)
 
