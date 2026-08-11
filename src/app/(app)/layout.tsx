@@ -4,6 +4,7 @@ import { Footer } from '@/components/layout/footer'
 import { Header } from '@/components/layout/header'
 import { isAuthenticated } from '@/features/auth/application/session'
 import {
+  isMailRedirected,
   PREVIEW_NAME,
   previewWelcomeEmail,
 } from '@/features/leads/application/preview-welcome-email'
@@ -25,6 +26,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             subject={email.subject}
             html={email.html}
             previewName={PREVIEW_NAME}
+            isRedirected={isMailRedirected()}
           />
         }
       />

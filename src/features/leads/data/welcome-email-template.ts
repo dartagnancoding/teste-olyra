@@ -5,6 +5,8 @@
  * suportado em email.
  */
 
+import type { RedirectNotice } from '@/features/leads/types/welcome-mailer'
+
 const FOREST = '#3c5b43'
 const FOREST_DEEP = '#061b0c'
 const CREAM = '#f8f4e8'
@@ -23,8 +25,20 @@ export function welcomeSubject(name: string): string {
   return `Bem-vindo à Olyra, ${name}!`
 }
 
-export function welcomeText(name: string): string {
+export function welcomeText(name: string, notice?: RedirectNotice): string {
+  const header = notice
+    ? [
+        '--------------------------------------------------',
+        `ENVIO DEMONSTRATIVO — destinatário original: ${notice.name} <${notice.email}>`,
+        'A conta de email está em modo de teste e só entrega no endereço do',
+        'administrador. Em produção, este email iria direto para o lead.',
+        '--------------------------------------------------',
+        '',
+      ]
+    : []
+
   return [
+    ...header,
     `Olá, ${name}!`,
     '',
     'Que bom ter você por aqui.',
@@ -38,7 +52,29 @@ export function welcomeText(name: string): string {
   ].join('\n')
 }
 
-export function welcomeHtml(name: string): string {
+/**
+ * Tarja de envio demonstrativo.
+ *
+ * Fica **fora** do cartão branco, em cinza e corpo menor: precisa ser lida
+ * como carimbo de entrega, não como parte da mensagem da Olyra. Quem
+ * encaminhar este email mostra, na própria peça, para quem ela iria.
+ */
+function redirectBanner(notice: RedirectNotice): string {
+  const safeName = escapeHtml(notice.name)
+  const safeEmail = escapeHtml(notice.email)
+
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;margin:0 0 16px 0;">
+            <tr>
+              <td style="padding:12px 16px;background-color:#ffffff;border:1px dashed ${SAGE};border-radius:10px;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.5;color:${TEXT_MUTED};">
+                <strong style="color:${FOREST};">Envio demonstrativo.</strong>
+                Este email era para <strong style="color:${FOREST_DEEP};">${safeName} &lt;${safeEmail}&gt;</strong>.
+                A conta de email está em modo de teste e só entrega no endereço do administrador; em produção ele iria direto para o lead.
+              </td>
+            </tr>
+          </table>`
+}
+
+export function welcomeHtml(name: string, notice?: RedirectNotice): string {
   const safeName = escapeHtml(name)
 
   return `<!doctype html>
@@ -47,6 +83,7 @@ export function welcomeHtml(name: string): string {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${CREAM};padding:32px 16px;">
       <tr>
         <td align="center">
+          ${notice ? redirectBanner(notice) : ''}
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;background-color:#ffffff;border:1px solid ${SAGE};border-radius:10px;">
             <tr>
               <td style="padding:32px 32px 8px 32px;">

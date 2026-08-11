@@ -8,6 +8,8 @@ type WelcomeEmailPreviewProps = {
   subject: string
   html: string
   previewName: string
+  /** Envios desviados para a caixa do administrador (conta em modo de teste). */
+  isRedirected: boolean
 }
 
 /**
@@ -23,6 +25,7 @@ export function WelcomeEmailPreview({
   subject,
   html,
   previewName,
+  isRedirected,
 }: WelcomeEmailPreviewProps) {
   const [isOpen, setIsOpen] = useState(false)
 
@@ -63,6 +66,17 @@ export function WelcomeEmailPreview({
           entra no lugar de{' '}
           <strong className="font-medium text-text">{previewName}</strong>.
         </p>
+
+        {/* Dito na tela, e não só no README: quem testar o painel pela primeira
+            vez precisa saber por que o email não chegou na caixa dele. */}
+        {isRedirected && (
+          <p className="mt-3 rounded-md border border-sage bg-sage-soft px-4 py-3 text-sm text-text">
+            A conta de email está em modo de teste e só entrega no endereço do
+            administrador. Os envios são desviados para lá com uma tarja indicando
+            o destinatário original — o disparo acontece de verdade, mas o lead não
+            recebe até um domínio próprio ser verificado.
+          </p>
+        )}
 
         <dl className="mt-4 rounded-md border border-border bg-bg px-4 py-3 text-sm">
           <div className="flex gap-3">

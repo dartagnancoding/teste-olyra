@@ -15,7 +15,7 @@ Já está pronto no repositório — não precisa mexer:
 |---|---|
 | Branch `main` | working tree limpo |
 | Build de produção | verde (`npm run build`) |
-| Testes | 64 verdes (`npm test`) |
+| Testes | 76 verdes (`npm test`) |
 | Lint e tipos | limpos (`npm run lint`, `npx tsc --noEmit`) |
 | Segredos versionados | nenhum — só `.env.example` com placeholders |
 | `netlify.toml` | build, plugin do Next e `NODE_VERSION = "22"` |
@@ -86,6 +86,7 @@ sete. Os valores são os mesmos do seu `.env.local`.
 | `SESSION_SECRET` | string aleatória longa |
 | `RESEND_API_KEY` | resend.com → API Keys |
 | `RESEND_FROM` | `onboarding@resend.dev` |
+| `MAIL_REDIRECT_TO` | endereço dono da conta Resend — desvia os envios para lá com uma tarja indicando o destinatário original. Deixe vazia quando houver domínio verificado |
 
 Marque o escopo como **All scopes** / todos os contextos de deploy.
 

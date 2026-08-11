@@ -9,7 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "pack:entrega": "git archive --format=zip --prefix=olyra-crm/ -o olyra-crm.zip HEAD"
+    "pack:entrega": "node scripts/pack-entrega.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.7.1",

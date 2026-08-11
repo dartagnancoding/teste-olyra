@@ -47,3 +47,44 @@ describe('welcomeHtml', () => {
     expect(welcomeHtml('Ana" style="x')).toContain('&quot;')
   })
 })
+
+describe('tarja de envio demonstrativo', () => {
+  const notice = { name: 'João Pedro', email: 'joao@exemplo.com' }
+
+  it('não aparece quando não há desvio', () => {
+    expect(welcomeHtml('Mariana')).not.toContain('Envio demonstrativo')
+    expect(welcomeText('Mariana')).not.toContain('ENVIO DEMONSTRATIVO')
+  })
+
+  it('nomeia o destinatário original no HTML', () => {
+    const html = welcomeHtml('João Pedro', notice)
+
+    expect(html).toContain('Envio demonstrativo')
+    expect(html).toContain('joao@exemplo.com')
+  })
+
+  it('nomeia o destinatário original na versão texto', () => {
+    const text = welcomeText('João Pedro', notice)
+
+    expect(text).toContain('joao@exemplo.com')
+    expect(text.indexOf('joao@exemplo.com')).toBeLessThan(text.indexOf('Olá,'))
+  })
+
+  /**
+   * O email do destinatário vem do banco, ou seja, de um formulário público.
+   * Na tarja ele entra no HTML igual ao nome — e precisa do mesmo escape.
+   */
+  it('escapa marcação vinda do destinatário original', () => {
+    const html = welcomeHtml('Mariana', {
+      name: '<img onerror=alert(1)>',
+      email: 'a"><script>alert(1)</script>@x.com',
+    })
+
+    expect(html).not.toContain('<script>')
+    expect(html).not.toContain('<img onerror')
+  })
+
+  it('mantém a mensagem da Olyra intacta abaixo da tarja', () => {
+    expect(welcomeHtml('João Pedro', notice)).toContain('Olá, João Pedro!')
+  })
+})

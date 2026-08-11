@@ -1,5 +1,18 @@
 export type SendResult = { ok: true } | { ok: false; message: string }
 
+/**
+ * Destinatário que o email teria em produção, quando o envio foi desviado.
+ *
+ * Existe porque a conta de email do desafio está em modo de teste e só entrega
+ * no endereço do administrador. Em vez de tratar isso como falha, o envio é
+ * desviado e o email carrega uma tarja dizendo para quem ele iria — dá para
+ * encaminhar a peça como prova de que o disparo funciona.
+ */
+export type RedirectNotice = {
+  name: string
+  email: string
+}
+
 /** O email pronto, do jeito que sai para o lead. */
 export type WelcomeEmail = {
   subject: string
@@ -20,6 +33,6 @@ export type WelcomeEmail = {
  * pior que nenhuma.
  */
 export type WelcomeMailer = {
-  compose(name: string): WelcomeEmail
+  compose(name: string, notice?: RedirectNotice): WelcomeEmail
   send(name: string, email: string): Promise<SendResult>
 }

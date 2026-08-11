@@ -1,49 +1,63 @@
-import 'server-only'
+import "server-only";
 
-import { Resend } from 'resend'
+import { Resend } from "resend";
 
+import { describeResendError } from "@/features/leads/data/resend-errors";
 import {
   welcomeHtml,
   welcomeSubject,
   welcomeText,
-} from '@/features/leads/data/welcome-email-template'
-import type { WelcomeEmail, WelcomeMailer } from '@/features/leads/types/welcome-mailer'
-import { requireEnv } from '@/lib/env'
+} from "@/features/leads/data/welcome-email-template";
+import type {
+  RedirectNotice,
+  WelcomeEmail,
+  WelcomeMailer,
+} from "@/features/leads/types/welcome-mailer";
+import { optionalEnv, requireEnv } from "@/lib/env";
 
 /**
  * Fora do objeto, e não como `this.compose`: assim `send` continua correto
  * mesmo se alguém desestruturar o mailer (`const { send } = welcomeMailer`).
  */
-function compose(name: string): WelcomeEmail {
+function compose(name: string, notice?: RedirectNotice): WelcomeEmail {
   return {
     subject: welcomeSubject(name),
-    html: welcomeHtml(name),
-    text: welcomeText(name),
-  }
+    html: welcomeHtml(name, notice),
+    text: welcomeText(name, notice),
+  };
 }
 
 export const resendWelcomeMailer: WelcomeMailer = {
   compose,
 
   async send(name, email) {
-    const resend = new Resend(requireEnv('RESEND_API_KEY'))
+    const resend = new Resend(requireEnv("RESEND_API_KEY"));
 
-    // Passa por `compose` de propósito: é o mesmo conteúdo que a tela de
-    // pré-visualização mostra, sem chance de os dois caminhos divergirem.
-    const { subject, html, text } = compose(name)
+    // Com `MAIL_REDIRECT_TO` configurado, todo envio vai para esse endereço.
+    // É o modo de demonstração: a conta do provedor está em teste e só
+    // entrega no endereço do administrador, então em vez de falhar o email
+    // é desviado e carrega uma tarja dizendo para quem ele iria. Sem a
+    // variável, o comportamento é o normal — o lead recebe direto.
+    const redirectTo = optionalEnv("MAIL_REDIRECT_TO");
+    const notice: RedirectNotice | undefined = redirectTo
+      ? { name, email }
+      : undefined;
+
+    const { subject, html, text } = compose(name, notice);
 
     const { error } = await resend.emails.send({
-      from: requireEnv('RESEND_FROM'),
-      to: email,
+      from: requireEnv("RESEND_FROM"),
+      to: redirectTo ?? email,
       subject,
       html,
       text,
-    })
+    });
 
-    if (!error) return { ok: true }
+    if (!error) return { ok: true };
 
-    console.error('[resend] falha ao enviar boas-vindas', error)
+    // A mensagem crua fica só aqui; a tela recebe a versão traduzida.
+    console.error("[resend] falha ao enviar boas-vindas", error);
 
-    return { ok: false, message: error.message || 'O Resend recusou o envio.' }
+    return { ok: false, message: describeResendError(error.message ?? "") };
   },
-}
+};

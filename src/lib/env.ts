@@ -16,3 +16,16 @@ export function requireEnv(name: string): string {
 
   return value
 }
+
+/**
+ * Variável cuja ausência é uma configuração válida, e não um erro.
+ *
+ * Devolve `null` em vez de string vazia para que o chamador seja obrigado a
+ * decidir o que fazer — `''` passaria despercebido num `if` e viraria bug
+ * silencioso.
+ */
+export function optionalEnv(name: string): string | null {
+  const value = process.env[name]?.trim()
+
+  return value ? value : null
+}
