@@ -2,7 +2,8 @@
 
 Painel interno para cadastrar leads da Olyra, filtrá-los por origem e disparar
 o email de boas-vindas. Duas visualizações da mesma base (lista e cards), acesso
-protegido por credencial fixa e envio real de email.
+protegido por credencial fixa e envio real de email — com uma prévia no header
+que mostra exatamente o que o lead recebe.
 
 Identidade visual seguindo o site da Olyra: superfícies brancas sobre `#f5f5f5`,
 verde floresta nas ações, Raleway nos títulos e movimento discreto.
@@ -20,7 +21,7 @@ verde floresta nas ações, Raleway nos títulos e movimento discreto.
 | Auth | Credencial fixa em env + cookie assinado | O enunciado pede credenciais fixas, sem cadastro de usuários. |
 | Formulários | React Hook Form + Zod | Validação declarativa compartilhada entre client e servidor. |
 | Email | Resend | API simples, sem servidor SMTP. |
-| Animação | Motion (Framer Motion) | Entrada dos cards com stagger, respeitando `prefers-reduced-motion`. |
+| Animação | Motion (Framer Motion) + `@starting-style` | Entrada e saída de leads com `AnimatePresence`; o modal anima em CSS puro, porque `<dialog>` na top layer não precisa de biblioteca. Tudo respeita `prefers-reduced-motion`. |
 | Deploy | Netlify | Pedido do desafio. `@netlify/plugin-nextjs` cobre o App Router. |
 
 ---
@@ -291,6 +292,7 @@ lógica pura e as fronteiras**, que é onde o erro passa despercebido.
 | `lead-schema.test.ts` | normalização e recusa de entrada inválida |
 | `describe-failure.test.ts` | o detalhe técnico vai para o log e **nunca** para a tela |
 | `format.test.ts` | data no fuso de São Paulo e degradação sem "Invalid Date" |
+| `welcome-email-template.test.ts` | o nome do lead vem de formulário e é interpolado no HTML — o escape está coberto |
 
 Não há teste de componente nem E2E. Com o tempo disponível, cobrir a lógica que
 falha em silêncio rende mais que simular clique em botão — o comportamento da

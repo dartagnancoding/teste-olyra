@@ -15,7 +15,7 @@ Já está pronto no repositório — não precisa mexer:
 |---|---|
 | Branch `main` | working tree limpo |
 | Build de produção | verde (`npm run build`) |
-| Testes | 57 verdes (`npm test`) |
+| Testes | 64 verdes (`npm test`) |
 | Lint e tipos | limpos (`npm run lint`, `npx tsc --noEmit`) |
 | Segredos versionados | nenhum — só `.env.example` com placeholders |
 | `netlify.toml` | build, plugin do Next e `NODE_VERSION = "22"` |
