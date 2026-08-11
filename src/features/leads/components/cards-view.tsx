@@ -1,10 +1,11 @@
 'use client'
 
-import { motion, useReducedMotion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { LeadCard } from '@/features/leads/components/lead-card'
+import { useLeadMotion } from '@/features/leads/components/lead-motion'
 import type { Lead } from '@/features/leads/types/lead'
 
 type CardsViewProps = {
@@ -14,8 +15,6 @@ type CardsViewProps = {
   onLeadUpdated: (lead: Lead) => void
   onLeadRemoved: (id: string) => void
 }
-
-const EASE_OUT_SOFT = [0, 0, 0.2, 1] as const
 
 /**
  * Apresentação pura: recebe a lista já filtrada e ordenada.
@@ -32,7 +31,7 @@ export function CardsView({
   onLeadUpdated,
   onLeadRemoved,
 }: CardsViewProps) {
-  const reduceMotion = useReducedMotion()
+  const leadMotion = useLeadMotion()
 
   if (leads.length === 0) {
     return (
@@ -44,24 +43,20 @@ export function CardsView({
 
   return (
     <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {leads.map((lead, index) => (
-        <motion.li
-          key={lead.id}
-          initial={{ opacity: 0, y: reduceMotion ? 0 : 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.4,
-            ease: EASE_OUT_SOFT,
-            delay: Math.min(index, 8) * 0.05,
-          }}
-        >
-          <LeadCard
-            lead={lead}
-            onLeadUpdated={onLeadUpdated}
-            onLeadRemoved={onLeadRemoved}
-          />
-        </motion.li>
-      ))}
+      {/* `popLayout` tira o card que sai do fluxo antes de animar: sem isso a
+          grade só se reorganizaria depois do fim da saída, e os vizinhos
+          dariam um salto seco para preencher o buraco. */}
+      <AnimatePresence mode="popLayout">
+        {leads.map((lead, index) => (
+          <motion.li key={lead.id} layout {...leadMotion(index)}>
+            <LeadCard
+              lead={lead}
+              onLeadUpdated={onLeadUpdated}
+              onLeadRemoved={onLeadRemoved}
+            />
+          </motion.li>
+        ))}
+      </AnimatePresence>
     </ul>
   )
 }

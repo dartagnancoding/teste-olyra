@@ -79,6 +79,59 @@
   }
 }
 
+@layer components {
+  /* Entrada e saída do `<dialog>`.
+     `display` e `overlay` são propriedades discretas: sem
+     `transition-behavior: allow-discrete` o navegador aplicaria `display:none`
+     e tiraria o elemento da top layer no primeiro quadro, cortando qualquer
+     animação de saída. Com ele, os dois saltos são adiados até o fim da
+     transição. `@starting-style` fornece o estado de onde a entrada parte —
+     não existe outro jeito de animar algo que acabou de sair de `display:none`. */
+  .modal-dialog {
+    opacity: 0;
+    scale: 0.97;
+    translate: 0 6px;
+    transition:
+      opacity 200ms var(--ease-out-soft),
+      scale 200ms var(--ease-out-soft),
+      translate 200ms var(--ease-out-soft),
+      overlay 200ms allow-discrete,
+      display 200ms allow-discrete;
+  }
+
+  .modal-dialog[open] {
+    opacity: 1;
+    scale: 1;
+    translate: none;
+  }
+
+  @starting-style {
+    .modal-dialog[open] {
+      opacity: 0;
+      scale: 0.97;
+      translate: 0 6px;
+    }
+  }
+
+  .modal-dialog::backdrop {
+    opacity: 0;
+    transition:
+      opacity 200ms var(--ease-out-soft),
+      overlay 200ms allow-discrete,
+      display 200ms allow-discrete;
+  }
+
+  .modal-dialog[open]::backdrop {
+    opacity: 1;
+  }
+
+  @starting-style {
+    .modal-dialog[open]::backdrop {
+      opacity: 0;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

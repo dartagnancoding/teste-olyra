@@ -1,13 +1,28 @@
 'use client'
 
-import { useCallback, useEffect, useId, useRef } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
+
+import { cn } from '@/lib/utils/cn'
 
 type ModalProps = {
   open: boolean
   onClose: () => void
   title: string
+  /** `wide` para conteúdo que precisa de largura, como a prévia do email. */
+  size?: 'default' | 'wide'
   children: React.ReactNode
 }
+
+const WIDTHS = {
+  default: 'w-[min(30rem,calc(100vw-2rem))]',
+  wide: 'w-[min(44rem,calc(100vw-2rem))]',
+} as const
+
+/**
+ * Espera da animação de saída antes de desmontar o conteúdo. Precisa ser maior
+ * que a transição declarada em `globals.css` (200ms).
+ */
+const EXIT_MS = 260
 
 /**
  * Modal sobre o `<dialog>` nativo, em vez de uma `<div>` com `position: fixed`.
@@ -16,12 +31,20 @@ type ModalProps = {
  * foco dentro do diálogo, fecha no Escape, torna o resto da página inerte para
  * leitor de tela e renderiza na top layer (nenhum `z-index` compete).
  *
- * O conteúdo só é montado enquanto aberto — assim o formulário volta limpo a
- * cada abertura, sem ninguém precisar chamar `reset()`.
+ * A animação de entrada e de saída é CSS puro (`.modal-dialog`, em
+ * `globals.css`), apoiada em `@starting-style` e em
+ * `transition-behavior: allow-discrete` — é o que permite animar a saída de um
+ * elemento que vai para `display: none` e deixa a top layer. Sem isso o
+ * diálogo desapareceria de um quadro para o outro.
+ *
+ * O conteúdo só fica montado enquanto o modal está aberto — assim o formulário
+ * volta limpo a cada abertura, sem ninguém chamar `reset()`. A desmontagem
+ * espera a saída terminar; feita na hora, o modal sairia da tela já vazio.
  */
-export function Modal({ open, onClose, title, children }: ModalProps) {
+export function Modal({ open, onClose, title, size = 'default', children }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
+  const [isMounted, setIsMounted] = useState(open)
 
   useEffect(() => {
     const dialog = ref.current
@@ -30,6 +53,17 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
 
     if (open && !dialog.open) dialog.showModal()
     if (!open && dialog.open) dialog.close()
+  }, [open])
+
+  useEffect(() => {
+    if (open) {
+      setIsMounted(true)
+      return
+    }
+
+    const timer = window.setTimeout(() => setIsMounted(false), EXIT_MS)
+
+    return () => window.clearTimeout(timer)
   }, [open])
 
   // `close` cobre Escape e o botão de fechar — um caminho só de volta ao pai.
@@ -53,9 +87,12 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
       ref={ref}
       aria-labelledby={titleId}
       onClick={handleClick}
-      className="m-auto w-[min(30rem,calc(100vw-2rem))] rounded-md border border-border bg-surface p-0 text-text shadow-raised backdrop:bg-forest-deep/40"
+      className={cn(
+        'modal-dialog m-auto rounded-md border border-border bg-surface p-0 text-text shadow-raised backdrop:bg-forest-deep/40',
+        WIDTHS[size],
+      )}
     >
-      {open && (
+      {isMounted && (
         <div className="p-6 sm:p-8">
           <div className="mb-6 flex items-start justify-between gap-4">
             <h2 id={titleId} className="font-display text-xl font-semibold">
