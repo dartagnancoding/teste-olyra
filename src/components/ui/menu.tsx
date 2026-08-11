@@ -19,8 +19,14 @@ type MenuProps = {
  * sem listener global nosso.
  *
  * A posição é calculada na abertura porque o ancoramento nativo (CSS anchor)
- * ainda não é uniforme entre navegadores.
+ * ainda não é uniforme entre navegadores — e é na abertura que dá para medir o
+ * menu, já que a top layer o renderiza antes do evento `toggle`.
  */
+
+/** Respiro entre o gatilho e o menu. */
+const GAP = 6
+/** Distância mínima da borda da janela. */
+const MARGIN = 8
 export function Menu({ label, children }: MenuProps) {
   const id = useId()
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -32,13 +38,27 @@ export function Menu({ label, children }: MenuProps) {
   function handleToggle(event: React.ToggleEvent<HTMLDivElement>) {
     if (event.newState !== 'open') return
 
-    const rect = triggerRef.current?.getBoundingClientRect()
+    const trigger = triggerRef.current?.getBoundingClientRect()
+    const menu = popoverRef.current?.getBoundingClientRect()
 
-    if (!rect) return
+    if (!trigger || !menu) return
+
+    // Abaixo do gatilho é o padrão. Mas na última linha da tabela o menu
+    // passava da dobra e escondia "Excluir lead": o popover vive na top layer,
+    // então a página não ganha rolagem para alcançá-lo. Quando não cabe
+    // embaixo e sobra mais espaço em cima, ele vira para cima.
+    const espacoAbaixo = window.innerHeight - trigger.bottom - MARGIN
+    const espacoAcima = trigger.top - MARGIN
+    const cabeAbaixo = espacoAbaixo >= menu.height + GAP
+
+    const top =
+      cabeAbaixo || espacoAbaixo >= espacoAcima
+        ? Math.min(trigger.bottom + GAP, window.innerHeight - menu.height - MARGIN)
+        : Math.max(MARGIN, trigger.top - menu.height - GAP)
 
     setPosition({
-      top: rect.bottom + 6,
-      right: Math.max(8, window.innerWidth - rect.right),
+      top: Math.max(MARGIN, top),
+      right: Math.max(MARGIN, window.innerWidth - trigger.right),
     })
   }
 
