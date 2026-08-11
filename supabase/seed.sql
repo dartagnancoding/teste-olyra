@@ -1,4 +1,5 @@
--- Leads fictícios para visualização inicial. Idempotente: rodar de novo não duplica.
+-- Sete leads fictícios para visualização inicial. Idempotente: rodar de novo
+-- não duplica — o email é a chave, e há índice único sobre ele.
 --
 -- Cada lead recebe um `created_at` próprio, recuado em dias a partir de agora.
 -- Sem isso todos herdam o mesmo `now()` da transação, com precisão de
@@ -19,7 +20,10 @@ select
     else now() - (novos.boas_vindas_ha_dias || ' days')::interval
   end
 from (values
-  ('Mariana Costa',  'mariana.costa@exemplo.com',  'Instagram', 0,  null::int),
+  -- Nome com acento de propósito: é o que permite demonstrar que a busca
+  -- encontra "Letícia Gonçalves" quando se digita "leticia goncalves".
+  ('Letícia Gonçalves', 'leticia.goncalves@exemplo.com', 'Indicação', 1, null::int),
+  ('Mariana Costa',  'mariana.costa@exemplo.com',  'Instagram', 0,  null),
   ('Rafael Andrade', 'rafael.andrade@exemplo.com', 'Indicação', 2,  1),
   ('Juliana Prado',  'juliana.prado@exemplo.com',  'Site',      5,  null),
   ('Bruno Lima',     'bruno.lima@exemplo.com',     'Feira',     9,  null),

@@ -82,21 +82,19 @@ create unique index if not exists leads_email_unique on leads (lower(email));
 alter table leads enable row level security;
 ```
 
-```sql
--- supabase/seed.sql — 6 leads fictícios, idempotente
-insert into leads (name, email, origin)
-select * from (values
-  ('Mariana Costa',  'mariana.costa@exemplo.com',  'Instagram'),
-  ('Rafael Andrade', 'rafael.andrade@exemplo.com', 'Indicação'),
-  ('Juliana Prado',  'juliana.prado@exemplo.com',  'Site'),
-  ('Bruno Lima',     'bruno.lima@exemplo.com',     'Feira'),
-  ('Carolina Nunes', 'carolina.nunes@exemplo.com', 'Instagram'),
-  ('Thiago Moreira', 'thiago.moreira@exemplo.com', 'Google')
-) as novos (name, email, origin)
-where not exists (
-  select 1 from leads existentes where existentes.email = novos.email
-);
-```
+O seed fica em [`supabase/seed.sql`](supabase/seed.sql) — sete leads fictícios,
+idempotente (o email é a chave; rodar de novo não duplica). Três detalhes são
+intencionais e vale saber por quê:
+
+- **Cada lead tem um `created_at` próprio,** recuado em dias. Inseridos numa
+  transação só, todos herdariam o mesmo `now()` com precisão de microssegundo —
+  e aí "mais recentes" e "mais antigos" devolvem a mesma ordem, fazendo a
+  ordenação parecer quebrada.
+- **Dois já receberam boas-vindas,** para a coluna de status mostrar os dois
+  estados e o botão de envio rápido aparecer habilitado e desabilitado na mesma
+  tela.
+- **Um nome tem acento** (Letícia Gonçalves), que é o que permite conferir que
+  a busca acha quem se digita "leticia goncalves".
 
 ### 4. Subir
 

@@ -195,9 +195,17 @@ circulação no fim de 2026. O Supabase ainda recusa a secret key com 401 se a
 requisição vier de um navegador — uma barreira a mais, de graça.)
 
 O seed foi reescrito em relação ao spec. O spec tinha um `insert ... values`
-simples, que duplicaria os 6 leads a cada execução. A versão final usa
+simples, que duplicaria os leads a cada execução. A versão final usa
 `select ... where not exists`, checando por email — **idempotente**. Rodar de
 novo não faz nada.
+
+Ele também espalha o `created_at` de cada lead. A primeira versão não fazia
+isso, e o resultado só apareceu ao testar no navegador: como todos entravam na
+mesma transação, herdavam o mesmo `now()` até o microssegundo, e trocar de
+"mais recentes" para "mais antigos" não mudava nada na tela. A ordenação estava
+certa; o dado é que não distinguia. Pelo mesmo motivo dois leads já chegam com
+as boas-vindas enviadas — sem isso a coluna de status tem um valor só — e um
+tem acento no nome, para dar como demonstrar a busca sem acento.
 
 **`src/features/leads/types/lead.ts`** — o vocabulário do domínio. `ORIGINS` é um
 array `as const`, o que permite derivar o tipo `Origin` dele

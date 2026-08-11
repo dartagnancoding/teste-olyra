@@ -15,7 +15,7 @@ Já está pronto no repositório — não precisa mexer:
 |---|---|
 | Branch `main` | working tree limpo |
 | Build de produção | verde (`npm run build`) |
-| Testes | 54 verdes (`npm test`) |
+| Testes | 57 verdes (`npm test`) |
 | Lint e tipos | limpos (`npm run lint`, `npx tsc --noEmit`) |
 | Segredos versionados | nenhum — só `.env.example` com placeholders |
 | `netlify.toml` | build, plugin do Next e `NODE_VERSION = "22"` |
@@ -113,8 +113,9 @@ Abra o link e percorra a lista. Marque conforme for:
 
 - [ ] Login com as credenciais fixas (aparecem na própria tela)
 - [ ] Rota protegida: abrir `/crm` numa aba anônima manda para `/login`
-- [ ] Lista carrega os 6 leads com badge de origem preenchido
-- [ ] Busca por nome funciona, inclusive **sem acento** (`indicacao`)
+- [ ] Lista carrega os 7 leads com badge de origem preenchido
+- [ ] Busca por nome funciona, inclusive **sem acento**: `goncalves` acha
+      Letícia Gonçalves
 - [ ] Filtro por origem
 - [ ] Ordenação: mais recentes, mais antigos, A–Z, Z–A
 - [ ] Toggle de lista ↔ cards **mantendo** o filtro aplicado
@@ -123,8 +124,17 @@ Abra o link e percorra a lista. Marque conforme for:
 - [ ] Excluir um lead, com a confirmação
 - [ ] **Abrir no celular de verdade**, não só no devtools
 
-Os dois últimos merecem atenção: o menu ⋮ e o toggle são os que **não** deu
-tempo de verificar no navegador antes do deploy.
+**O que já foi verificado no navegador**, contra o Supabase real: o menu ⋮ nas
+duas pontas da tabela (a última linha vira para cima, o que estava quebrado e
+foi corrigido), o toggle preservando busca e filtro, a busca, e a ordenação
+alfabética nos dois sentidos.
+
+**O que ficou sem confirmação visual:** a ordenação por data. Os leads do seed
+tinham `created_at` idêntico, o que tornava "mais recentes" e "mais antigos"
+indistinguíveis; as datas foram espalhadas, mas a aba do navegador
+entrou em segundo plano e o React parou de hidratar antes do reteste. O
+comparador está coberto por teste unitário com datas distintas — mas confira
+na sua primeira passada em produção.
 
 ---
 
