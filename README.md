@@ -111,11 +111,14 @@ Abrir http://localhost:3000 e entrar com `AUTH_USER` / `AUTH_PASSWORD`.
 ## Deploy no Netlify
 
 1. Subir o repositório para o GitHub.
-2. Em netlify.com, conectar o repositório. O `netlify.toml` já declara o build e
-   o plugin `@netlify/plugin-nextjs`.
+2. Em netlify.com, conectar o repositório. O `netlify.toml` já declara o build,
+   o plugin `@netlify/plugin-nextjs` e o Node 22.
 3. Site settings → Environment variables: cadastrar **todas** as variáveis do
    `.env.example` com os valores reais.
 4. Deploy.
+
+Passo a passo detalhado, com checklist de teste em produção e tabela de falhas:
+[`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ---
 
@@ -192,14 +195,16 @@ Organização **por feature**, cada uma dividida em quatro camadas.
 src/
   features/
     leads/
-      components/           crm-view, cards-view, lead-form, lead-table,
-                            lead-card, search-bar, send-welcome-button,
-                            new-lead-button
+      components/           crm-view (dono do estado), toggle-view, lead-table,
+                            cards-view, lead-card, lead-actions, lead-form,
+                            search-bar, send-welcome-button, new-lead-button
       hooks/                use-lead-list — lista, filtros e mutações locais
-      application/          casos de uso: get-leads, create-lead,
+                            use-send-welcome — regra de envio, compartilhada
+                            pelo botão rápido e pelo menu
+      application/          casos de uso: get-leads, create-lead, delete-lead,
                             send-welcome, filter-leads, describe-failure
-      data/                 supabase-lead-repository, resend-welcome-mailer,
-                            welcome-email-template
+      data/                 supabase-lead-repository, postgrest-errors,
+                            resend-welcome-mailer, welcome-email-template
       types/                lead, lead-row, lead-schema, results, data-result
                             e as portas: lead-repository, welcome-mailer
       actions.ts            Server Actions — adaptador de entrada
@@ -214,9 +219,9 @@ src/
       dependencies.ts       composition root
   components/
     ui/                     átomos e moléculas compartilhados (button, input,
-                            select, field, card, badge, empty/error state)
-    layout/                 header, footer, nav-link, logout-button,
-                            page-heading
+                            select, field, card, badge, modal, menu, skeleton,
+                            empty/error state)
+    layout/                 header, footer, logout-button, page-heading
     brand/                  wordmark
   lib/
     supabase/client.ts      conexão compartilhada (server-only, preguiçosa)
@@ -229,11 +234,15 @@ src/
     login/page.tsx          tela de login
     (app)/                  grupo de rotas protegidas
       layout.tsx            guard de sessão + header + footer
-      crm/page.tsx          formulário + resumo + busca + tabela
-      cards/page.tsx        busca + grid de cards
+      crm/page.tsx          a tela: busca, filtros e as duas visões
+      crm/loading.tsx       skeleton enquanto o servidor busca os leads
 supabase/
   schema.sql · seed.sql     SQL de criação e leads fictícios
 ```
+
+Testes ficam ao lado do que testam (`filter-leads.test.ts` vizinho de
+`filter-leads.ts`), não em uma árvore `__tests__` paralela — mover o arquivo
+leva o teste junto.
 
 **Direção das dependências.**
 
@@ -266,6 +275,33 @@ e as rotas não mudam. O mesmo vale para trocar o Resend: a porta é
 - Estados de carregamento, vazio e erro em toda tela com dados
 - `prefers-reduced-motion` respeitado
 
+## Testes
+
+```bash
+npm test          # roda uma vez
+npm run test:watch
+```
+
+Vitest, ambiente Node, sem DOM. A cobertura é deliberadamente estreita: **a
+lógica pura e as fronteiras**, que é onde o erro passa despercebido.
+
+| Arquivo | O que garante |
+|---|---|
+| `filter-leads.test.ts` | busca sem acento, filtro por origem, as quatro ordenações e a não-mutação da lista original |
+| `postgrest-errors.test.ts` | cada código do Postgres/PostgREST cai na categoria certa |
+| `lead-row.test.ts` | uma coluna renomeada no banco derruba o parse — regressão de um bug real |
+| `lead-schema.test.ts` | normalização e recusa de entrada inválida |
+| `describe-failure.test.ts` | o detalhe técnico vai para o log e **nunca** para a tela |
+| `format.test.ts` | data no fuso de São Paulo e degradação sem "Invalid Date" |
+
+Não há teste de componente nem E2E. Com o tempo disponível, cobrir a lógica que
+falha em silêncio rende mais que simular clique em botão — o comportamento da
+interface foi verificado no navegador.
+
+> `vitest.config.mts` aponta `server-only` para o módulo vazio do próprio
+> pacote. Fora do contexto de servidor do React ele lança de propósito, e é
+> essa barreira que impede um componente client de arrastar a chave do Supabase.
+
 ## Scripts
 
 ```bash
@@ -273,4 +309,5 @@ npm run dev     # desenvolvimento
 npm run build   # build de produção
 npm run start   # servir o build
 npm run lint    # ESLint
+npm test        # Vitest
 ```

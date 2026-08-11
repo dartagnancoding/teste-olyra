@@ -13,10 +13,16 @@ Já está pronto no repositório — não precisa mexer:
 
 | Item | Estado |
 |---|---|
-| Branch `main` | 14 commits, working tree limpo |
+| Branch `main` | working tree limpo |
 | Build de produção | verde (`npm run build`) |
+| Testes | 54 verdes (`npm test`) |
+| Lint e tipos | limpos (`npm run lint`, `npx tsc --noEmit`) |
 | Segredos versionados | nenhum — só `.env.example` com placeholders |
 | `netlify.toml` | build, plugin do Next e `NODE_VERSION = "22"` |
+
+> Se `npm run build` falhar **local** com `PageNotFoundError: /_document`, é
+> `.next` obsoleto de quando as rotas mudaram, não o seu código: `rm -rf .next`
+> e rode de novo. O Netlify builda do zero, então nunca esbarra nisso.
 
 Você vai precisar de: conta no GitHub, conta no Netlify e o seu `.env.local`
 aberto do lado (os valores reais vão para o painel do Netlify).
@@ -47,7 +53,7 @@ git push -u origin main
 O Git Credential Manager vai abrir o navegador para autenticar na primeira vez.
 
 **Como saber que deu certo:** `git remote -v` mostra o `origin`, e o GitHub
-lista os 14 commits.
+lista o histórico completo — o mesmo que `git log --oneline` mostra aqui.
 
 ---
 
@@ -161,10 +167,27 @@ mostrar v18, o `netlify.toml` não foi lido — o repositório subiu incompleto.
 
 Em ordem de prioridade:
 
-1. **Montar o `.zip`** sem `node_modules`, `.next`, `.env.local` e `.claude`
+1. **Montar o `.zip`:**
+
+   ```bash
+   npm run pack:entrega
+   ```
+
+   Gera `olyra-crm.zip` (~213 KB, 120 arquivos). Usa `git archive`, então
+   empacota **exatamente o que está versionado** — `node_modules`, `.next`,
+   `.env.local` e `.claude` ficam de fora por construção, não por uma lista de
+   exclusão que alguém pode esquecer de atualizar.
+
+   > Atenção: `git archive` lê o **último commit**, não o working tree. Se você
+   > editou algo agora, commite antes de empacotar ou a mudança não vai no zip.
+
+   O zip inclui `specs/spec-desafio-olyra.md`, o enunciado do próprio desafio.
+   Se preferir não devolvê-lo junto, remova o arquivo do repositório antes.
+
 2. **Enviar** para `tech@olyra.com.br` e `brunoqueirozbk@gmail.com` com: zip,
    link do Netlify, credenciais e o email de boas-vindas encaminhado
-3. Só então as melhorias — editor da mensagem do email, status de lead, testes
+
+3. Só então as melhorias — editor da mensagem do email, status de lead
 
 O prazo é **quarta, 12/08**. Os itens 1 e 2 são a entrega; o resto é extra.
 

@@ -51,8 +51,9 @@ cadastra leads (nome, email, origem), enxerga a mesma base em duas visualizaçõ
 boas-vindas de verdade para o lead — com o status do envio gravado no banco.
 
 Olyra vende aromatizadores. Por isso a interface não parece software corporativo:
-fundo creme, verde floresta, títulos em serifada. Isso é decisão de produto, não
-enfeite — está escrito no spec logo na primeira seção.
+superfícies brancas sobre cinza claro, verde floresta nas ações, Raleway nos
+títulos. Isso é decisão de produto, não enfeite — está escrito no spec logo na
+primeira seção, e a paleta veio do site deles, não do meu gosto.
 
 ---
 
@@ -374,7 +375,7 @@ chama a action de auth, mas continua sendo peça de layout.)
 **`components/brand/wordmark.tsx`** não estava no spec. Nasceu como um SVG de
 folha desenhado à mão e hoje serve a **logo oficial da Olyra** — o lockup
 horizontal (símbolo de gota com espiral + "OLYRA"), monocromático e com fundo
-transparente, o que dispensa variante para creme e para branco.
+transparente, o que dispensa uma variante por cor de fundo.
 
 O arquivo é servido de `public/olyra-logo.png`, e **não** por hotlink na CDN da
 loja: dependência de terceiro pode cair, mudar de caminho ou limitar requisição,

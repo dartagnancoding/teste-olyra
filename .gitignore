@@ -47,3 +47,6 @@ next-env.d.ts
 # claude code — worktrees guardam uma cópia inteira do projeto
 .claude/worktrees/
 .claude/settings.local.json
+
+# pacote de entrega, gerado por `npm run pack:entrega`
+olyra-crm.zip

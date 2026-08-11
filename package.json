@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "pack:entrega": "git archive --format=zip --prefix=olyra-crm/ -o olyra-crm.zip HEAD"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.7.1",
